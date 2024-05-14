@@ -30,10 +30,6 @@ CREATE TABLE IF NOT EXISTS "aerich" (
     "version" VARCHAR(255) NOT NULL,
     "app" VARCHAR(100) NOT NULL,
     "content" JSON NOT NULL
-);
-CREATE TABLE IF NOT EXISTS "user_receipt" (
-    "user_id" INT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE,
-    "receipt_id" INT NOT NULL REFERENCES "receipt" ("id") ON DELETE CASCADE
 );"""
 
 

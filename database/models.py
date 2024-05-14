@@ -6,7 +6,7 @@ class User(models.Model):
     username = fields.CharField(max_length=32, null=True)
     name = fields.CharField(max_length=129)  # 128 max chars + spacebar
     # is_admin = fields.BooleanField(default=False)
-    favourite_receipts = fields.ManyToManyField('models.Receipt', related_name='favourite_by', through='models.UserFavouriteReceipt')
+    favourite_receipts = fields.ManyToManyField('models.Receipt', related_name='favourite_by', through='userfavouritereceipt')
 
 
 class Category(models.Model):
