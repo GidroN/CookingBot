@@ -2,6 +2,7 @@ import os
 import logging
 import asyncio
 
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher
 from tortoise import Tortoise
@@ -19,7 +20,8 @@ async def main():
     await init()
 
     # other things
-    bot = Bot(token=BOT_TOKEN, parse_mode='HTML')
+    default = DefaultBotProperties(parse_mode='HTML')
+    bot = Bot(token=BOT_TOKEN, default=default)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)

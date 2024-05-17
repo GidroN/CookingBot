@@ -20,3 +20,13 @@ main_menu_user_kb = ReplyKeyboardMarkup(
     resize_keyboard=True,
     input_field_placeholder='Главное меню',
 )
+
+cancel_mk = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.CANCEL),
+        ]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)

@@ -8,3 +8,6 @@ class ButtonText(StrEnum):
     MY_RECEIPTS = '📚 Мои рецепты'
     ADD_RECEIPT = '➕ Добавить рецепт'
     SETTINGS = '⚙ Настройки'
+    CANCEL = '❌ Отменить'
+    CONFIRM = '✔ Принять'
+    CATALOG = '🛒 Каталог'
