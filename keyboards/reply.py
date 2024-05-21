@@ -6,19 +6,33 @@ rmk = ReplyKeyboardRemove()
 main_menu_user_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text=BT.SEARCH_RECEIPTS),
-            KeyboardButton(text=BT.ADD_RECEIPT),
+            KeyboardButton(text=BT.SEARCH_RECIPES),
+            KeyboardButton(text=BT.ADD_RECIPE),
         ],
         [
-            KeyboardButton(text=BT.FAVOURITE_RECEIPTS),
-            KeyboardButton(text=BT.MY_RECEIPTS),
+            KeyboardButton(text=BT.PROFILE),
+            KeyboardButton(text=BT.TIMER),
         ],
         [
-            KeyboardButton(text=BT.SETTINGS),
+            KeyboardButton(text=BT.MAIN_MENU),
         ]
     ],
     resize_keyboard=True,
     input_field_placeholder='Главное меню',
+)
+
+profile_mk = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.FAVOURITE_RECIPES),
+            KeyboardButton(text=BT.MY_RECIPES)
+        ],
+        [
+            KeyboardButton(text=BT.MAIN_MENU),
+        ]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder='Выберите опцию'
 )
 
 cancel_mk = ReplyKeyboardMarkup(

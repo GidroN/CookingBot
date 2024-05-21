@@ -1,11 +1,11 @@
-CREATE TABLE Subscription
-(
-    id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    is_active   BOOLEAN,
-    duration    VARCHAR(100),
-    start       DATE,
-    `end`       DATE
-);
+-- CREATE TABLE Subscription
+-- (
+--     id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+--     is_active   BOOLEAN,
+--     duration    VARCHAR(100),
+--     start       DATE,
+--     `end`       DATE
+-- );
 
 CREATE TABLE Category
 (
@@ -33,9 +33,7 @@ CREATE TABLE User
 
     favourite_recipes_id INT          NOT NULL,
     published_recipes_id INT          NOT NULL,
-    subscription_id      INT          NULL,
 
     FOREIGN KEY (favourite_recipes_id) REFERENCES Recipe  (id) ON DELETE CASCADE,
     FOREIGN KEY (published_recipes_id) REFERENCES Recipe  (id) ON DELETE CASCADE,
-    FOREIGN KEY (subscription_id) REFERENCES Subscription (id) ON DELETE CASCADE
 );

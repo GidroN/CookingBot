@@ -1,7 +1,9 @@
+import asyncio
 import os
 import json
 import re
 
+from aiogram.types import Message
 from dotenv import load_dotenv
 from keyboards.reply import main_menu_user_kb
 
@@ -32,3 +34,9 @@ def extract_recipe_info(text):
     url = url_match.group(1) if url_match else None
 
     return name, url
+
+
+async def set_timer(message: Message, timer_minutes: int):
+    timer_second = timer_minutes * 60
+    await asyncio.sleep(timer_second)
+    await message.reply('Время истекло!')
