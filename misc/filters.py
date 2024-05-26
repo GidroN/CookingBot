@@ -1,6 +1,6 @@
 from aiogram.filters import Filter
 from aiogram.types import Message
-from utils import ADMINS
+from misc.config import ADMINS
 
 
 class AdminFilter(Filter):

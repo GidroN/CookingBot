@@ -1,14 +1,16 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from keyboards.factories import RecipePaginationCallback, PaginationAction, AddRecipeToFavouritesCallback, \
+    ReportRecipeCallback
 from keyboards.button_text import ButtonText as BT
 from database.models import Category, Recipe
 
 
 async def categories(prefix: str, show_all_recipes=False):
     all_categories = await Category.all()
-    keyboard = InlineKeyboardBuilder()
     all_recipes = await Recipe.all().count()
+    keyboard = InlineKeyboardBuilder()
     if show_all_recipes:
         keyboard.add(InlineKeyboardButton(text=BT.SEARCH_ALL_RECIPES + f" ({all_recipes})", callback_data=f'{prefix}all'))
     for item in all_categories:
@@ -17,20 +19,20 @@ async def categories(prefix: str, show_all_recipes=False):
     return keyboard.adjust(1).as_markup()
 
 
-recipe_panel = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text=BT.PREV, callback_data='go_to_next_recipe'),
-            InlineKeyboardButton(text=BT.NEXT, callback_data='go_to_prev_recipe'),
-        ],
-        [
-            InlineKeyboardButton(text=BT.ADDED_TO_FAVOURITE_RECIPES, callback_data='add_recipe_to_favourites'),
-        ],
-        [
-            InlineKeyboardButton(text=BT.REPORT_RECIPE, callback_data='report_recipe'),
-        ]
-    ]
-)
+def user_recipe_panel(recipe_id: int, favourite: bool = False, page: int = 0):
+    keyboard = InlineKeyboardBuilder()
+    favourite_recipe = BT.ADDED_TO_FAVOURITE_RECIPES if favourite else BT.ADD_TO_FAVOURITE_RECIPES
+    keyboard.add(
+        InlineKeyboardButton(text=BT.PREV, callback_data=RecipePaginationCallback(page=page,
+                                                                                  action=PaginationAction.prev).pack()),
+        InlineKeyboardButton(text=BT.NEXT, callback_data=RecipePaginationCallback(page=page,
+                                                                                  action=PaginationAction.next).pack()),
+        InlineKeyboardButton(text=favourite_recipe, callback_data=AddRecipeToFavouritesCallback(page=page,
+                                                                                                recipe_id=recipe_id).pack()),
+        InlineKeyboardButton(text=BT.REPORT_RECIPE, callback_data=ReportRecipeCallback(recipe_id=recipe_id).pack()),
+    )
+    return keyboard.adjust(2, 1, 1).as_markup()
+
 
 my_recipe_edit_panel = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -43,10 +45,11 @@ my_recipe_edit_panel = InlineKeyboardMarkup(
             InlineKeyboardButton(text=BT.CHANGE_RECIPE_URL, callback_data='g'),
         ],
         [
-            InlineKeyboardButton(text=BT.DELETE_RECIPE, callback='g'),
+            InlineKeyboardButton(text=BT.DELETE_RECIPE, callback_data='g'),
         ]
     ]
 )
+
 
 search_type_panel = InlineKeyboardMarkup(
     inline_keyboard=[

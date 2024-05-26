@@ -13,12 +13,18 @@ main_menu_user_kb = ReplyKeyboardMarkup(
             KeyboardButton(text=BT.PROFILE),
             KeyboardButton(text=BT.TIMER),
         ],
-        [
-            KeyboardButton(text=BT.MAIN_MENU),
-        ]
     ],
     resize_keyboard=True,
     input_field_placeholder='Главное меню',
+)
+
+only_main_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.MAIN_MENU)
+        ],
+    ],
+    resize_keyboard=True,
 )
 
 profile_mk = ReplyKeyboardMarkup(

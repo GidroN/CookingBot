@@ -24,3 +24,9 @@ class Recipe(models.Model):
 class UserFavouriteRecipe(models.Model):
     user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='user_favourites')
     recipe = fields.ForeignKeyField('models.Recipe', on_delete=fields.CASCADE, related_name='recipe_favourites')
+
+
+class Report(models.Model):
+    recipe = fields.ForeignKeyField('models.Recipe', on_delete=fields.CASCADE, related_name='recipe_report')
+    user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='user_report')
+

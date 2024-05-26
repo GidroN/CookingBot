@@ -3,11 +3,11 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import cancel_mk, categories, profile_mk, recipe_panel
+from keyboards import cancel_mk, categories, profile_mk, user_recipe_panel, my_recipe_edit_panel
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, UserFavouriteRecipe
-from states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from utils import get_main_kb
+from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
+from misc.utils import get_main_kb, send_user_recipe_info
 
 router = Router(name='user_handlers')
 
@@ -74,13 +74,16 @@ async def add_recipe(message: Message, state: FSMContext):
 @router.message(Command('fav_recipes'))
 async def favourite_recipes(message: Message):
     user = await User.get(tg_id=message.from_user.id).prefetch_related('favourite_recipes')
-    favourite_recipes = await user.favourite_recipes.all()
+    favourite_recipes = await user.favourite_recipes.all().prefetch_related('recipe')
 
     if not favourite_recipes:
         await message.answer('У вас пока что нет сохраненных рецептов')
         return
 
-    await message.answer('...')
+    # await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.', reply_markup=get_main_kb(message.chat.id,
+    #                                                                                                        True))
+    await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
+    await send_user_recipe_info(favourite_recipes, message, print_find=False)
 
 
 @router.message(F.text == BT.MY_RECIPES)
@@ -102,14 +105,14 @@ async def user_recipes(message: Message):
             return
 
         await message.answer(f'<b>{recipe.title}</b>\n'
-                             f'Автор: {recipe.creator.name}\n'
-                             f'{recipe.url}', reply_markup=recipe_panel)
+                             f'{recipe.url}', reply_markup=my_recipe_edit_panel)
         count += 1
 
 
 @router.message(F.text == BT.SEARCH_RECIPES)
 @router.message(Command('search_recipe'))
 async def search_recipe(message: Message, state: FSMContext):
+    await message.answer('Вы перешли к выбору категории.', reply_markup=get_main_kb(message.chat.id, True))
     await message.answer('Выберите категорию, в которой хотите искать рецепт:',
                          reply_markup=await categories('select_category_to_search_recipe_', show_all_recipes=True))
     await state.set_state(SearchRecipeForm.category)

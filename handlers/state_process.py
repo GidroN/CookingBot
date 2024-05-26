@@ -5,11 +5,11 @@ from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import recipe_panel
+from keyboards import user_recipe_panel
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, Category
-from states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from utils import extract_recipe_info, get_main_kb, set_timer
+from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
+from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info
 
 router = Router(name='states_process')
 
@@ -43,7 +43,7 @@ async def invalid_add_recipe_form(message: Message, state: FSMContext):
 @router.message(SearchRecipeForm.get_user_input, F.text)
 async def search_recipe_form_by_category(message: Message, state: FSMContext):
     if message.text == BT.CANCEL:
-        await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id))
+        await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id, only_menu=True))
         await state.set_state(SearchRecipeForm.search_type)
         return
 
@@ -55,30 +55,18 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
 
     result = []
     if search_type == 'name':
-        result = await Recipe.filter(title__icontains=prompt, category=category).prefetch_related('creator')
+        result = await Recipe.filter(title__icontains=prompt, category=category).prefetch_related('creator',
+                                                                                                  'category')
     elif search_type == 'author':
-        result = await Recipe.filter(creator__name__icontains=prompt, category=category).prefetch_related('creator')
+        result = await Recipe.filter(creator__name__icontains=prompt, category=category).prefetch_related('creator',
+                                                                                                          'category')
 
-    # if category:
-    #     result = await result.filter(category=category)
-
-    recipes_found = len(result)
-    count = 1
-    for recipe in result:
-        if count == 5:
-            await message.answer('...')
-            return
-
-        await message.answer(f'<b>{recipe.title}</b>\n'
-                             f'Автор: {recipe.creator.name}\n'
-                             f'{recipe.url}', reply_markup=recipe_panel)
-        count += 1
-
-    await message.answer(f'Найдено {recipes_found} рецептов', reply_markup=get_main_kb(message.chat.id))
-    await state.set_state(SearchRecipeForm.search_type)
+    await state.update_data(result=result)
+    await send_user_recipe_info(result, message, category)
+    await state.set_state(SearchRecipeForm.result)
 
 
-@router.message(SearchRecipeForm.result, ~F.text)
+@router.message(SearchRecipeForm.get_user_input, ~F.text)
 async def invalid_search_recipe_form(message: Message, state: FSMContext):
     await message.answer('Отправьте текстом!')
 

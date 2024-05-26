@@ -1,9 +1,9 @@
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from database.models import Recipe
-from filters import AdminFilter
+from misc.filters import AdminFilter
 
 router = Router(name='admin_handlers')
 

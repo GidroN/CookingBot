@@ -1,4 +1,3 @@
-import os
 import logging
 import asyncio
 
@@ -8,8 +7,8 @@ from aiogram import Bot, Dispatcher
 from tortoise import Tortoise
 
 from database.connection import init
-from routers import router
-from utils import BOT_TOKEN
+from misc.routers import router
+from misc.config import BOT_TOKEN
 
 
 async def main():
