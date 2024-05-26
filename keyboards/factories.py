@@ -20,3 +20,4 @@ class AddRecipeToFavouritesCallback(CallbackData, prefix='add_to_fav'):
 
 class ReportRecipeCallback(CallbackData, prefix='report_recipe'):
     recipe_id: int
+

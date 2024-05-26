@@ -80,8 +80,6 @@ async def favourite_recipes(message: Message):
         await message.answer('У вас пока что нет сохраненных рецептов')
         return
 
-    # await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.', reply_markup=get_main_kb(message.chat.id,
-    #                                                                                                        True))
     await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
     await send_user_recipe_info(favourite_recipes, message, print_find=False)
 
@@ -98,15 +96,8 @@ async def user_recipes(message: Message):
 
     result = await Recipe.filter(creator__tg_id=message.chat.id).prefetch_related('creator')
 
-    count = 1
-    for recipe in result:
-        if count == 5:
-            await message.answer('...')
-            return
-
-        await message.answer(f'<b>{recipe.title}</b>\n'
-                             f'{recipe.url}', reply_markup=my_recipe_edit_panel)
-        count += 1
+    await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
+    await send_user_recipe_info(favourite_recipes, message, print_find=False)
 
 
 @router.message(F.text == BT.SEARCH_RECIPES)

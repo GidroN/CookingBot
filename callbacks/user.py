@@ -69,7 +69,7 @@ async def back_to_choose_category(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(SearchRecipeForm.search_type, F.data.startswith('choose_search_type_by_'))
-async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bot):
+async def choose_search_type(callback: CallbackQuery, state: FSMContext):
     search_type = callback.data.split('_')[-1]
 
     if search_type == 'name':
