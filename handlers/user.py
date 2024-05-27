@@ -8,6 +8,7 @@ from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, UserFavouriteRecipe
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
 from misc.utils import get_main_kb, send_user_recipe_info
+from database.redis_client import rc
 
 router = Router(name='user_handlers')
 
@@ -96,8 +97,8 @@ async def user_recipes(message: Message):
 
     result = await Recipe.filter(creator__tg_id=message.chat.id).prefetch_related('creator')
 
-    await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
-    await send_user_recipe_info(favourite_recipes, message, print_find=False)
+    # await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
+    # await send_user_recipe_info(favourite_recipes, message, print_find=False)
 
 
 @router.message(F.text == BT.SEARCH_RECIPES)

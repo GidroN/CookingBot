@@ -8,8 +8,9 @@ from aiogram.types import Message
 from keyboards import user_recipe_panel
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, Category
+from database.redis_client import rc
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info
+from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info, convert_ids_list_into_objects
 
 router = Router(name='states_process')
 
@@ -55,15 +56,20 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
 
     result = []
     if search_type == 'name':
-        result = await Recipe.filter(title__icontains=prompt, category=category).prefetch_related('creator',
-                                                                                                  'category')
-    elif search_type == 'author':
-        result = await Recipe.filter(creator__name__icontains=prompt, category=category).prefetch_related('creator',
-                                                                                                          'category')
+        ids = await (Recipe.filter(title__icontains=prompt, category=category)
+                     .prefetch_related('creator', 'category')
+                     .values_list('id', flat=True))
 
-    await state.update_data(result=result)
+    else:  # author
+        ids = await (Recipe.filter(creator__name__icontains=prompt, category=category)
+                     .prefetch_related('creator', 'category')
+                     .values_list('id', flat=True))
+
+    client = rc.get_client()
+    client.lpush(f'{message.chat.id}', *ids)
+    result = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
     await send_user_recipe_info(result, message, category)
-    await state.set_state(SearchRecipeForm.result)
+    await state.clear()
 
 
 @router.message(SearchRecipeForm.get_user_input, ~F.text)
@@ -75,7 +81,8 @@ async def invalid_search_recipe_form(message: Message, state: FSMContext):
 async def set_timer_form(message: Message, state: FSMContext):
     await state.clear()
     minutes = int(message.text)
-    await message.answer(f'Таймер установлен на {minutes} минут(ы). По истечению времени вам придет сообщение.', reply_markup=get_main_kb(message.chat.id))
+    await message.answer(f'Таймер установлен на {minutes} минут(ы). По истечению времени вам придет сообщение.',
+                         reply_markup=get_main_kb(message.chat.id))
     await asyncio.create_task(set_timer(message, minutes))
 
 

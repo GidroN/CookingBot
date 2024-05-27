@@ -1,7 +1,10 @@
 import re
+import redis
 import asyncio
+from typing import Any
 
 from aiogram.types import Message
+from tortoise import models
 
 from keyboards import user_recipe_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu
@@ -59,11 +62,12 @@ async def send_user_recipe_info(recipes_list: list[Recipe],
             await message.answer(f'Найдено {len(recipes_list)} рецептов',
                                  reply_markup=get_main_kb(message.chat.id, only_menu=True))
 
-    text = f"""Рецепт {page + 1}/{len(recipes_list)}\n'
-                             f'<b>{recipe.title}</b>\n'
-                             f'Категория: {recipe.category.title}\n'
-                             f'Автор: {recipe.creator.name}\n'
-                             f'{recipe.url}"""
+    text = f"""Рецепт {page + 1}/{len(recipes_list)}
+<b>{recipe.title}</b>
+Категория: {recipe.category.title}
+Автор: {recipe.creator.name}
+{recipe.url}"""
+
     reply_markup = user_recipe_panel(recipe.id, favourite, page)
 
     if not edit_msg:
@@ -80,13 +84,28 @@ async def send_user_recipe_change(recipes_list: list[Recipe],
     recipe = recipes_list[page]
     user = await User.get(tg_id=message.chat.id)
 
-    text = f"""Рецепт {page + 1}/{len(recipes_list)}\n'
-            f'<b>{recipe.title}</b>\n'
-            f'Категория: {recipe.category.title}\n'
-            f'{recipe.url}"""
+    text = f"""Рецепт {page + 1}/{len(recipes_list)}
+<b>{recipe.title}</b>
+Категория: {recipe.category.title}
+{recipe.url}"""
+
     reply_markup = ...
     if not edit_msg:
         await message.answer(text, reply_markup=reply_markup)
     else:
         await message.edit_text(text)
         await message.edit_reply_markup(reply_markup=reply_markup)
+
+
+def get_ids_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
+    if issubclass(types, int):
+        lst = [int(item) for item in client.lrange(key, 0, -1)]
+    else:
+        lst = [item.decode() for item in client.lrange(key, 0, -1)]
+    lst.reverse()
+    return lst
+
+
+async def convert_ids_list_into_objects(ids_list: list[int], model: models.Model, prefetch_related: list = None) -> list[models.Model]:
+    prefetch_related = [] if not prefetch_related else prefetch_related
+    return await model.filter(id__in=ids_list).prefetch_related(*prefetch_related)

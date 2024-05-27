@@ -10,7 +10,7 @@ class SearchRecipeForm(StatesGroup):
     category = State()
     search_type = State()
     get_user_input = State()
-    result = State()
+    # result = State()
 
 
 class SetTimerForm(StatesGroup):

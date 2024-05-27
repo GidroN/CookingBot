@@ -1,4 +1,5 @@
 import os
+import redis
 from tortoise import Tortoise, run_async
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

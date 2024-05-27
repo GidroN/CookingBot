@@ -1,15 +1,17 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 
 from database.models import Category, Recipe, User, UserFavouriteRecipe, Report
+from database.redis_client import rc
 from keyboards import cancel_mk, search_type_panel, categories, user_recipe_panel, RecipePaginationCallback, \
     AddRecipeToFavouritesCallback
 from keyboards.button_text import ButtonText as BT
 from keyboards.factories import ReportRecipeCallback
 from misc.states import AddRecipeForm, SearchRecipeForm
-from misc.utils import get_main_kb, send_user_recipe_info
+from misc.utils import get_main_kb, send_user_recipe_info, get_ids_list_from_cache, convert_ids_list_into_objects
 
 router = Router(name='user_callbacks')
 
@@ -56,7 +58,8 @@ async def choose_category_to_search_recipe(callback: CallbackQuery, state: FSMCo
         await callback.answer('Производиться поиск по всем рецептам.')
         await send_user_recipe_info(result, callback.message)
         await state.update_data(result=result)
-        await state.set_state(SearchRecipeForm.result)
+        # await state.set_state(SearchRecipeForm.result)
+        await state.clear()
 
 
 @router.callback_query(SearchRecipeForm.search_type, F.data == 'back_to_choose_category')
@@ -69,7 +72,7 @@ async def back_to_choose_category(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(SearchRecipeForm.search_type, F.data.startswith('choose_search_type_by_'))
-async def choose_search_type(callback: CallbackQuery, state: FSMContext):
+async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bot):
     search_type = callback.data.split('_')[-1]
 
     if search_type == 'name':
@@ -82,23 +85,30 @@ async def choose_search_type(callback: CallbackQuery, state: FSMContext):
 
     else:
         # search_type = all
-        category = (await state.get_data())['category']
-        result = await Recipe.filter(category=category).prefetch_related('category', 'creator')
-        await state.update_data(result=result)
         await callback.answer('Производится поиск по самым новым рецептам.')
+        client = rc.get_client()
+        category = (await state.get_data())['category']
+        ids = await Recipe.filter(category=category).values_list('id', flat=True)
+        client.lpush(f'{callback.message.chat.id}', *ids)
+        result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
         await send_user_recipe_info(result, callback.message, category)
-        await state.set_state(SearchRecipeForm.result)
+        await state.clear()
         return
 
     await state.set_state(SearchRecipeForm.get_user_input)
     await state.update_data(search_type=search_type)
 
 
-@router.callback_query(SearchRecipeForm.result, RecipePaginationCallback.filter())
+@router.callback_query(default_state, RecipePaginationCallback.filter())
 async def process_search_result(callback: CallbackQuery, callback_data: RecipePaginationCallback, state: FSMContext):
-    result = (await state.get_data())['result']
+    client = rc.get_client()
+    key = f'{callback.message.chat.id}'
+    ids = get_ids_list_from_cache(client, key, int)
+    result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
+
     page = callback_data.page
     action = callback_data.action
+
     if action == 'prev':
         page -= 1
     if action == 'next':
@@ -114,7 +124,7 @@ async def process_search_result(callback: CallbackQuery, callback_data: RecipePa
     await send_user_recipe_info(result, callback.message, page=page, print_find=False, edit_msg=True)
 
 
-@router.callback_query(SearchRecipeForm.result, AddRecipeToFavouritesCallback.filter())
+@router.callback_query(default_state, AddRecipeToFavouritesCallback.filter())
 async def process_add_to_favourites(callback: CallbackQuery, callback_data: AddRecipeToFavouritesCallback, state: FSMContext):
     recipe_id = callback_data.recipe_id
     page = callback_data.page
@@ -131,7 +141,7 @@ async def process_add_to_favourites(callback: CallbackQuery, callback_data: AddR
         await callback.message.edit_reply_markup(reply_markup=user_recipe_panel(recipe.id, True, page))
 
 
-@router.callback_query(SearchRecipeForm.result, ReportRecipeCallback.filter())
+@router.callback_query(default_state, ReportRecipeCallback.filter())
 async def process_user_recipe_report(callback: CallbackQuery, callback_data: ReportRecipeCallback, state: FSMContext):
     recipe_id = callback_data.recipe_id
     user_id = callback.message.chat.id
@@ -148,7 +158,7 @@ async def process_user_recipe_report(callback: CallbackQuery, callback_data: Rep
         reports_quantity = await Report.filter(recipe=recipe).count()
 
         if reports_quantity == 3:
-            # TODO: notify admins
+            # TODO: Notify admins
             ...
 
 
