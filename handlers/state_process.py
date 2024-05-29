@@ -10,7 +10,8 @@ from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, Category
 from database.redis_client import rc
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info, convert_ids_list_into_objects
+from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info, \
+    convert_ids_list_into_objects, cache_list_update
 
 router = Router(name='states_process')
 
@@ -54,7 +55,6 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
     category = (await state.get_data())['category']
     prompt = message.text
 
-    result = []
     if search_type == 'name':
         ids = await (Recipe.filter(title__icontains=prompt, category=category)
                      .prefetch_related('creator', 'category')
@@ -65,8 +65,13 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
                      .prefetch_related('creator', 'category')
                      .values_list('id', flat=True))
 
+    if not ids:
+        await message.answer('По вашему запросу не найдено рецептов.', reply_markup=get_main_kb(message.chat.id, True))
+        return
+
     client = rc.get_client()
-    client.lpush(f'{message.chat.id}', *ids)
+    key = str(message.chat.id)
+    cache_list_update(client, key, ids)
     result = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
     await send_user_recipe_info(result, message, category)
     await state.clear()

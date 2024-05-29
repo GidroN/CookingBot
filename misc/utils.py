@@ -97,7 +97,7 @@ async def send_user_recipe_change(recipes_list: list[Recipe],
         await message.edit_reply_markup(reply_markup=reply_markup)
 
 
-def get_ids_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
+def get_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
     if issubclass(types, int):
         lst = [int(item) for item in client.lrange(key, 0, -1)]
     else:
@@ -109,3 +109,8 @@ def get_ids_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
 async def convert_ids_list_into_objects(ids_list: list[int], model: models.Model, prefetch_related: list = None) -> list[models.Model]:
     prefetch_related = [] if not prefetch_related else prefetch_related
     return await model.filter(id__in=ids_list).prefetch_related(*prefetch_related)
+
+
+def cache_list_update(client: redis.Redis, key: str, lst: list) -> None:
+    client.delete(key)
+    client.lpush(key, *lst)

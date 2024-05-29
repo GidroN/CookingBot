@@ -2,3 +2,24 @@
 tortoise_orm = "database.connection.TORTOISE_ORM_CONFIG"
 location = "./database/migrations"
 src_folder = "./."
+
+[tool.poetry]
+name = "cookingbot"
+version = "0.1.0"
+description = "My final college project"
+authors = ["Anton ill <gidrontv1@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^3.6.0"
+python-dotenv = "^1.0.1"
+tortoise-orm = "^0.21.2"
+redis = "^5.0.4"
+aerich = "^0.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

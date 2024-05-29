@@ -11,7 +11,8 @@ from keyboards import cancel_mk, search_type_panel, categories, user_recipe_pane
 from keyboards.button_text import ButtonText as BT
 from keyboards.factories import ReportRecipeCallback
 from misc.states import AddRecipeForm, SearchRecipeForm
-from misc.utils import get_main_kb, send_user_recipe_info, get_ids_list_from_cache, convert_ids_list_into_objects
+from misc.utils import get_main_kb, send_user_recipe_info, get_list_from_cache, convert_ids_list_into_objects, \
+    cache_list_update
 
 router = Router(name='user_callbacks')
 
@@ -58,7 +59,6 @@ async def choose_category_to_search_recipe(callback: CallbackQuery, state: FSMCo
         await callback.answer('Производиться поиск по всем рецептам.')
         await send_user_recipe_info(result, callback.message)
         await state.update_data(result=result)
-        # await state.set_state(SearchRecipeForm.result)
         await state.clear()
 
 
@@ -89,7 +89,8 @@ async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bo
         client = rc.get_client()
         category = (await state.get_data())['category']
         ids = await Recipe.filter(category=category).values_list('id', flat=True)
-        client.lpush(f'{callback.message.chat.id}', *ids)
+        key = str(callback.message.chat.id)
+        cache_list_update(client, key, ids)
         result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
         await send_user_recipe_info(result, callback.message, category)
         await state.clear()
@@ -103,7 +104,7 @@ async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bo
 async def process_search_result(callback: CallbackQuery, callback_data: RecipePaginationCallback, state: FSMContext):
     client = rc.get_client()
     key = f'{callback.message.chat.id}'
-    ids = get_ids_list_from_cache(client, key, int)
+    ids = get_list_from_cache(client, key, int)
     result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
 
     page = callback_data.page

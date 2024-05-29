@@ -7,22 +7,24 @@ services:
 #      - potgres
     environment:
       - REDIS_URL=redis://redis:6379
-#      - DATABSE_URL=postgresql://postgres:password@postgres:5432/botdb
+      - DATABSE_URL=postgresql://postgres:password@postgres:5432/botdb
     volumes:
       - .:/app
 
   redis:
     image: "redis:latest"
+    container_name: "redis"
     ports:
       - "6379:6379"
 
-#  postgres:
-#    image: "postgres:latest"
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: password
-#      POSTGRES_DB: botdb
-#    ports:
-#      - "5432:5432"
+  postgres:
+    image: "postgres:latest"
+    container_name: "postgres"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: botdb
+    ports:
+      - "5432:5432"
 #    volumes:
 #      - postgres_data:/var/lib/postgresql/data
