@@ -10,8 +10,16 @@ class SearchRecipeForm(StatesGroup):
     category = State()
     search_type = State()
     get_user_input = State()
-    # result = State()
+
+
+class EditRecipeForm(StatesGroup):
+    get_user_input = State()
+    category = State()
 
 
 class SetTimerForm(StatesGroup):
     minutes = State() # get_user_input
+
+
+class DeleteRecipeForm(StatesGroup):
+    confirm = State()

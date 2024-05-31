@@ -21,4 +21,5 @@ class ButtonText(StrEnum):
     NEXT = '➡ Вперед'
     CHANGE_RECIPE_NAME = '✏ Изменить название'
     CHANGE_RECIPE_URL = '✏ Изменить ссылку'
+    CHANGE_RECIPE_CATEGORY = '✏ Изменить категорию'
     DELETE_RECIPE = '🗑 Удалить рецепт'

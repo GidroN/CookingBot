@@ -6,7 +6,7 @@ from typing import Any
 from aiogram.types import Message
 from tortoise import models
 
-from keyboards import user_recipe_panel
+from keyboards.builders import user_recipe_panel, user_recipe_change_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu
 from misc.config import ADMINS
 from database.models import Recipe, Category, User
@@ -44,7 +44,7 @@ async def set_timer(message: Message, timer_minutes: int):
     await message.reply('Время истекло!')
 
 
-async def send_user_recipe_info(recipes_list: list[Recipe],
+async def send_user_recipe_info(recipes_list: list[Recipe] | list[models.Model],
                                 message: Message,
                                 category: Category | None = None,
                                 edit_msg: bool = False,
@@ -77,19 +77,17 @@ async def send_user_recipe_info(recipes_list: list[Recipe],
         await message.edit_reply_markup(reply_markup=reply_markup)
 
 
-async def send_user_recipe_change(recipes_list: list[Recipe],
+async def send_user_recipe_change(recipes_list: list[Recipe] | list[models.Model],
                                   message: Message,
                                   edit_msg: bool = False,
                                   page: int = 0):
     recipe = recipes_list[page]
-    user = await User.get(tg_id=message.chat.id)
-
     text = f"""Рецепт {page + 1}/{len(recipes_list)}
 <b>{recipe.title}</b>
 Категория: {recipe.category.title}
 {recipe.url}"""
 
-    reply_markup = ...
+    reply_markup = user_recipe_change_panel(recipe.id, page)
     if not edit_msg:
         await message.answer(text, reply_markup=reply_markup)
     else:

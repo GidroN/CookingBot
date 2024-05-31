@@ -6,13 +6,14 @@ from aiogram.types import Message, CallbackQuery
 
 from database.models import Category, Recipe, User, UserFavouriteRecipe, Report
 from database.redis_client import rc
-from keyboards import cancel_mk, search_type_panel, categories, user_recipe_panel, RecipePaginationCallback, \
-    AddRecipeToFavouritesCallback
+from keyboards import cancel_mk, search_type_panel, RecipePaginationCallback, \
+    AddRecipeToFavouritesCallback, PaginationMarkup, RecipeChangeItem, confirm_delete_recipe, DeleteRecipeAction
+from keyboards.builders import categories, user_recipe_panel
 from keyboards.button_text import ButtonText as BT
-from keyboards.factories import ReportRecipeCallback
-from misc.states import AddRecipeForm, SearchRecipeForm
+from keyboards.factories import ReportRecipeCallback, ChangeRecipeInfoCallback, DeleteRecipeCallback
+from misc.states import AddRecipeForm, SearchRecipeForm, EditRecipeForm, DeleteRecipeForm
 from misc.utils import get_main_kb, send_user_recipe_info, get_list_from_cache, convert_ids_list_into_objects, \
-    cache_list_update
+    cache_list_update, send_user_recipe_change
 
 router = Router(name='user_callbacks')
 
@@ -55,11 +56,9 @@ async def choose_category_to_search_recipe(callback: CallbackQuery, state: FSMCo
         await state.set_state(SearchRecipeForm.search_type)
         return
     else:  # all
-        result = await Recipe.all().order_by('date').prefetch_related('category', 'creator')
         await callback.answer('Производиться поиск по всем рецептам.')
-        await send_user_recipe_info(result, callback.message)
-        await state.update_data(result=result)
-        await state.clear()
+        await state.set_state(SearchRecipeForm.search_type)
+        await state.update_data(search_type='all', category=None)
 
 
 @router.callback_query(SearchRecipeForm.search_type, F.data == 'back_to_choose_category')
@@ -122,11 +121,15 @@ async def process_search_result(callback: CallbackQuery, callback_data: RecipePa
         page = len(result) - 1
         await callback.answer('Это последний рецепт.')
 
-    await send_user_recipe_info(result, callback.message, page=page, print_find=False, edit_msg=True)
+    if callback_data.markup == PaginationMarkup.VIEWER:
+        await send_user_recipe_info(result, callback.message, page=page, print_find=False, edit_msg=True)
+    else:
+        await send_user_recipe_change(result, callback.message, page=page, edit_msg=True)
 
 
 @router.callback_query(default_state, AddRecipeToFavouritesCallback.filter())
-async def process_add_to_favourites(callback: CallbackQuery, callback_data: AddRecipeToFavouritesCallback, state: FSMContext):
+async def process_add_to_favourites(callback: CallbackQuery, callback_data: AddRecipeToFavouritesCallback,
+                                    state: FSMContext):
     recipe_id = callback_data.recipe_id
     page = callback_data.page
     user = await User.get(tg_id=callback.message.chat.id).prefetch_related('favourite_recipes')
@@ -158,8 +161,74 @@ async def process_user_recipe_report(callback: CallbackQuery, callback_data: Rep
 
         reports_quantity = await Report.filter(recipe=recipe).count()
 
-        if reports_quantity == 3:
+        if reports_quantity >= 3:
             # TODO: Notify admins
             ...
 
 
+@router.callback_query(default_state, ChangeRecipeInfoCallback.filter())
+async def process_change_recipe_info(callback: CallbackQuery, callback_data: ChangeRecipeInfoCallback,
+                                     state: FSMContext):
+    await callback.answer()
+
+    change_item = callback_data.change_item
+    recipe_id = callback_data.recipe_id
+
+    if change_item == RecipeChangeItem.NAME:
+        await callback.message.answer('Введите новое название для рецепта', reply_markup=cancel_mk)
+        await state.set_state(EditRecipeForm.get_user_input)
+
+    elif change_item == RecipeChangeItem.LINK:
+        await callback.message.answer('Введите новую ссылку на рецепт:', reply_markup=cancel_mk)
+        await state.set_state(EditRecipeForm.get_user_input)
+
+    elif change_item == RecipeChangeItem.CATEGORY:
+        await callback.message.answer('Выберите категорию:', reply_markup=await categories('recipe_edit_category_'))
+        await state.set_state(EditRecipeForm.category)
+
+    else:
+        await callback.message.answer('Вы уверены, что хотите удалить этот рецепт?', reply_markup=confirm_delete_recipe)
+        await state.set_state(DeleteRecipeForm.confirm)
+        await state.update_data(recipe_id=recipe_id)
+
+    await state.update_data(change_item=change_item, recipe_id=recipe_id)
+
+
+@router.callback_query(DeleteRecipeForm.confirm, DeleteRecipeCallback.filter())
+async def process_delete_recipe_form(callback: CallbackQuery, callback_data: DeleteRecipeCallback, state: FSMContext):
+    action = callback_data.action
+    recipe_id = (await state.get_data())['recipe_id']
+    recipe = await Recipe.get(id=recipe_id)
+
+    if action == DeleteRecipeAction.CANCEL:
+        await callback.message.delete()
+        await callback.answer('Отменено.')
+    else:  # action == CONFIRM
+        await recipe.delete()
+        await callback.message.delete()
+        await callback.message.answer('Рецепт успешно удален!')
+
+        client = rc.get_client()
+        key = f'{callback.message.chat.id}'
+        ids = get_list_from_cache(client, key, int)
+        ids.remove(recipe_id)
+        cache_list_update(client, key, ids)
+
+    await state.clear()
+
+
+@router.callback_query(EditRecipeForm.category, F.data.startswith('recipe_edit_category'))
+async def process_recipe_edit_category(callback: CallbackQuery, state: FSMContext):
+    recipe_id = (await state.get_data())['recipe_id']
+    category_id = int(callback.data.split('_')[-1])
+
+    category = await Category.get(id=category_id)
+    recipe = await Recipe.get(id=recipe_id)
+
+    recipe.category = category
+    await recipe.save()
+
+    await callback.answer('Категория успешно изменена.')
+    await callback.message.delete()
+
+    await state.clear()

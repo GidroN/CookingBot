@@ -5,11 +5,11 @@ from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import user_recipe_panel
+from keyboards.constants import RecipeChangeItem
 from keyboards.button_text import ButtonText as BT
-from database.models import User, Recipe, Category
+from database.models import User, Recipe
 from database.redis_client import rc
-from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
+from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm, EditRecipeForm, DeleteRecipeForm
 from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info, \
     convert_ids_list_into_objects, cache_list_update
 
@@ -60,10 +60,12 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
                      .prefetch_related('creator', 'category')
                      .values_list('id', flat=True))
 
-    else:  # author
+    elif search_type == 'author':
         ids = await (Recipe.filter(creator__name__icontains=prompt, category=category)
                      .prefetch_related('creator', 'category')
                      .values_list('id', flat=True))
+    else: # all
+        ids = await Recipe.all().prefetch_related('creator', 'category').values_list('id', flat=True)
 
     if not ids:
         await message.answer('По вашему запросу не найдено рецептов.', reply_markup=get_main_kb(message.chat.id, True))
@@ -99,3 +101,25 @@ async def invalid_set_timer_form(message: Message, state: FSMContext):
         return
 
     await message.answer('Введите положительное число!')
+
+
+@router.message(EditRecipeForm.get_user_input)
+async def edit_recipe_data(message: Message, state: FSMContext):
+    if message.text == BT.CANCEL:
+        await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id, only_menu=True))
+        await state.clear()
+        return
+
+    data = await state.get_data()
+    change_item = data['change_item']
+    recipe_id = data['recipe_id']
+    recipe = await Recipe.get(id=recipe_id)
+
+    if change_item == RecipeChangeItem.NAME:
+        recipe.title = message.text
+    else: # change_item == RecipeChangeItem.LINK:
+        recipe.url = message.text
+
+    await recipe.save()
+    await message.answer('Данные успешно сохранены!', reply_markup=get_main_kb(message.chat.id, only_menu=True))
+    await state.clear()

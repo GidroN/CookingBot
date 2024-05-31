@@ -3,11 +3,13 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import cancel_mk, categories, profile_mk, user_recipe_panel, my_recipe_edit_panel
+from keyboards import cancel_mk, profile_mk
+from keyboards.builders import categories, user_recipe_panel, user_recipe_change_panel
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe, UserFavouriteRecipe
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from misc.utils import get_main_kb, send_user_recipe_info
+from misc.utils import get_main_kb, send_user_recipe_info, cache_list_update, convert_ids_list_into_objects, \
+    send_user_recipe_change
 from database.redis_client import rc
 
 router = Router(name='user_handlers')
@@ -74,12 +76,17 @@ async def add_recipe(message: Message, state: FSMContext):
 @router.message(F.text == BT.FAVOURITE_RECIPES)
 @router.message(Command('fav_recipes'))
 async def favourite_recipes(message: Message):
-    user = await User.get(tg_id=message.from_user.id).prefetch_related('favourite_recipes')
-    favourite_recipes = await user.favourite_recipes.all().prefetch_related('recipe')
+    tg_id = str(message.from_user.id)
+    user = await User.get(tg_id=tg_id).prefetch_related('favourite_recipes')
+    ids = await user.favourite_recipes.all().prefetch_related('category', 'creator').values_list('id', flat=True)
 
-    if not favourite_recipes:
+    if not ids:
         await message.answer('У вас пока что нет сохраненных рецептов')
         return
+
+    client = rc.get_client()
+    cache_list_update(client, tg_id, ids)
+    favourite_recipes = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
 
     await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
     await send_user_recipe_info(favourite_recipes, message, print_find=False)
@@ -88,17 +95,20 @@ async def favourite_recipes(message: Message):
 @router.message(F.text == BT.MY_RECIPES)
 @router.message(Command('my_recipes'))
 async def user_recipes(message: Message):
+    tg_id = str(message.from_user.id)
+    client = rc.get_client()
     user = await User.get(tg_id=message.from_user.id)
-    created_recipes = await Recipe.filter(creator=user)
+    ids = await Recipe.filter(creator=user).values_list('id', flat=True)
 
-    if not created_recipes:
+    if not ids:
         await message.answer('Вы пока что не добавили ни одного рецепта. Чтобы добавить рецепт напишите /add_recipe')
         return
 
-    result = await Recipe.filter(creator__tg_id=message.chat.id).prefetch_related('creator')
+    cache_list_update(client, tg_id, ids)
+    created_recipes = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
 
-    # await message.answer(f'У вас {len(favourite_recipes)} сохраненных рецептов.')
-    # await send_user_recipe_info(favourite_recipes, message, print_find=False)
+    await message.answer(f'У вас {len(created_recipes)} созданных рецептов.')
+    await send_user_recipe_change(created_recipes, message)
 
 
 @router.message(F.text == BT.SEARCH_RECIPES)

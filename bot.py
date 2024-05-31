@@ -18,9 +18,9 @@ async def main():
 
     # init db and redis
     await init()
-    client = rc.connect(host=REDIS_HOST, port=REDIS_PORT)
+    rc.connect(host=REDIS_HOST, port=REDIS_PORT)
 
-    # other things
+    # set up bot
     default = DefaultBotProperties(parse_mode='HTML')
     bot = Bot(token=BOT_TOKEN, default=default)
     storage = MemoryStorage()
@@ -34,7 +34,7 @@ async def main():
         # shutdown bot
         tasks = [dp.storage.close(), Tortoise.close_connections()]
         await asyncio.wait([asyncio.create_task(task) for task in tasks])
-        client.disconnect()
+        rc.disconnect()
         await bot.session.close()
 
 
