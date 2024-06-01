@@ -7,18 +7,24 @@ from aiogram.types import Message
 from tortoise import models
 
 from keyboards.builders import user_recipe_panel, user_recipe_change_panel
-from keyboards.reply import main_menu_user_kb, only_main_menu
+from keyboards.reply import main_menu_user_kb, only_main_menu, main_menu_admin_kb, main_menu_user_with_admin_option_kb
 from misc.config import ADMINS
 from database.models import Recipe, Category, User
 
 
-def is_admin(tg_id: str) -> bool:
+def is_admin(tg_id: int) -> bool:
     return tg_id in ADMINS
 
 
-def get_main_kb(tg_id: int, only_menu=False):
+def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
     if only_menu:
         return only_main_menu
+
+    if is_admin(tg_id):
+        if show_admin_panel:
+            return main_menu_admin_kb
+        else:
+            return main_menu_user_with_admin_option_kb
 
     return main_menu_user_kb
 

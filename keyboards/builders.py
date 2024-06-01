@@ -2,7 +2,8 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.models import Category, Recipe
-from keyboards.factories import RecipePaginationCallback, PaginationAction, PaginationMarkup, AddRecipeToFavouritesCallback, \
+from keyboards.factories import RecipePaginationCallback, PaginationAction, PaginationMarkup, \
+    AddRecipeToFavouritesCallback, \
     ReportRecipeCallback, ChangeRecipeInfoCallback, RecipeChangeItem
 from keyboards.button_text import ButtonText as BT
 
@@ -17,7 +18,11 @@ async def categories(prefix: str, show_all_recipes=False):
     for item in all_categories:
         category_items = await Recipe.filter(category=item).count()
         keyboard.add(InlineKeyboardButton(text=f"{item.title} ({category_items})", callback_data=f'{prefix}{item.id}'))
-    return keyboard.adjust(2).as_markup()
+    if show_all_recipes:
+        keyboard.adjust(1, 2)
+    else:
+        keyboard.adjust(2)
+    return keyboard.as_markup()
 
 
 def user_recipe_panel(recipe_id: int, favourite: bool = False, page: int = 0):
@@ -68,3 +73,4 @@ def user_recipe_change_panel(recipe_id: int, page: int = 0):
     )
 
     return keyboard.adjust(2, 2, 1, 1).as_markup()
+

@@ -32,15 +32,17 @@ async def choose_category_to_add_recipe(callback: CallbackQuery, state: FSMConte
     category = await Category.get(id=category_id)
     await callback.answer(f'Вы перешли в категорию {category.title}')
     await state.update_data(category=category)
-    await state.set_state(AddRecipeForm.recipe)
+    await state.set_state(AddRecipeForm.title)
     await callback.message.answer(f'Отлично, вы выбрали категорию <b>{category.title}</b>.\n'
-                                  f'Теперь чтобы добавить рецепт, заполните информацию в таком виде (Пробелы после скобок соблюдать!):\n'
-                                  f'---------------------------------------------\n'
-                                  f'1) Название\n'
-                                  f'2) Ссылка на статью с рецептом в https://telegra.ph \n'
-                                  f'---------------------------------------------\n'
-                                  f'Подробнее про телеграф - https://uchet-jkh.ru/i/telegraf-dlya-telegram-cto-eto-i-kak-ono-rabotaet/',
-                                  reply_markup=cancel_mk)
+                                  f'Теперь пришлите название рецепта.')
+    # await callback.message.answer(f'Отлично, вы выбрали категорию <b>{category.title}</b>.\n'
+    #                               f'Теперь чтобы добавить рецепт, заполните информацию в таком виде (Пробелы после скобок соблюдать!):\n'
+    #                               f'---------------------------------------------\n'
+    #                               f'1) Название\n'
+    #                               f'2) Ссылка на статью с рецептом в https://telegra.ph \n'
+    #                               f'---------------------------------------------\n'
+    #                               f'Подробнее про телеграф - https://uchet-jkh.ru/i/telegraf-dlya-telegram-cto-eto-i-kak-ono-rabotaet/',
+    #                               reply_markup=cancel_mk)
 
 
 @router.callback_query(SearchRecipeForm.category, F.data.startswith('select_category_to_search_recipe_'))
@@ -51,14 +53,13 @@ async def choose_category_to_search_recipe(callback: CallbackQuery, state: FSMCo
         category = await Category.get(id=category_id)
         await callback.answer(f'Вы перешли в категорию {category.title}')
         await state.update_data(category=category)
-        await callback.message.edit_text('Как хотите произвести поиск?')
-        await callback.message.edit_reply_markup(reply_markup=search_type_panel)
-        await state.set_state(SearchRecipeForm.search_type)
-        return
     else:  # all
         await callback.answer('Производиться поиск по всем рецептам.')
-        await state.set_state(SearchRecipeForm.search_type)
         await state.update_data(search_type='all', category=None)
+
+    await callback.message.edit_text('Как хотите произвести поиск?')
+    await callback.message.edit_reply_markup(reply_markup=search_type_panel)
+    await state.set_state(SearchRecipeForm.search_type)
 
 
 @router.callback_query(SearchRecipeForm.search_type, F.data == 'back_to_choose_category')
@@ -73,6 +74,7 @@ async def back_to_choose_category(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(SearchRecipeForm.search_type, F.data.startswith('choose_search_type_by_'))
 async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bot):
     search_type = callback.data.split('_')[-1]
+    category = (await state.get_data())['category']
 
     if search_type == 'name':
         await callback.answer(f'Вы выбрали поиск по названию.')
@@ -82,12 +84,16 @@ async def choose_search_type(callback: CallbackQuery, state: FSMContext, bot: Bo
         await callback.answer(f'Вы выбрали поиск по автору')
         await callback.message.answer('Введите запрос', reply_markup=cancel_mk)
 
-    else:
-        # search_type = all
-        await callback.answer('Производится поиск по самым новым рецептам.')
-        client = rc.get_client()
-        category = (await state.get_data())['category']
-        ids = await Recipe.filter(category=category).values_list('id', flat=True)
+    elif search_type == 'all':
+        if category: # all in category
+            await callback.answer(f'Производится поиск по самым новым рецептам в категории {category.title}')
+            client = rc.get_client()
+            ids = await Recipe.filter(category=category).values_list('id', flat=True)
+        else: # all without category
+            await callback.answer(f'Производится поиск по самым новым рецептам.')
+            client = rc.get_client()
+            ids = await Recipe.all().values_list('id', flat=True)
+
         key = str(callback.message.chat.id)
         cache_list_update(client, key, ids)
         result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])

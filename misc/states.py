@@ -4,6 +4,8 @@ from aiogram.fsm.state import StatesGroup, State
 class AddRecipeForm(StatesGroup):
     category = State()
     recipe = State()
+    title = State()
+    url = State()
 
 
 class SearchRecipeForm(StatesGroup):

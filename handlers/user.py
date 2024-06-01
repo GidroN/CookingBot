@@ -4,9 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from keyboards import cancel_mk, profile_mk
-from keyboards.builders import categories, user_recipe_panel, user_recipe_change_panel
+from keyboards.builders import categories
 from keyboards.button_text import ButtonText as BT
-from database.models import User, Recipe, UserFavouriteRecipe
+from database.models import User, Recipe
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
 from misc.utils import get_main_kb, send_user_recipe_info, cache_list_update, convert_ids_list_into_objects, \
     send_user_recipe_change
@@ -69,6 +69,7 @@ async def settings(message: Message):
 @router.message(Command('add_recipe'))
 async def add_recipe(message: Message, state: FSMContext):
     await state.set_state(AddRecipeForm.category)
+    await message.answer('Вы перешли к выбору категории.', reply_markup=get_main_kb(message.chat.id, True))
     await message.answer('Чтобы добавить рецепт, сначала выберите категорию, в котoрую хотите добавить:',
                          reply_markup=await categories('select_category_to_add_recipe_'))
 
@@ -94,7 +95,7 @@ async def favourite_recipes(message: Message):
 
 @router.message(F.text == BT.MY_RECIPES)
 @router.message(Command('my_recipes'))
-async def user_recipes(message: Message):
+async def user_recipes(message: Message, state: FSMContext):
     tg_id = str(message.from_user.id)
     client = rc.get_client()
     user = await User.get(tg_id=message.from_user.id)

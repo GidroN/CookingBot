@@ -31,3 +31,4 @@ confirm_delete_recipe = InlineKeyboardMarkup(
         ]
     ]
 )
+

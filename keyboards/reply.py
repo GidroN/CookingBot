@@ -3,21 +3,6 @@ from .button_text import ButtonText as BT
 
 rmk = ReplyKeyboardRemove()
 
-main_menu_user_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text=BT.SEARCH_RECIPES),
-            KeyboardButton(text=BT.ADD_RECIPE),
-        ],
-        [
-            KeyboardButton(text=BT.PROFILE),
-            KeyboardButton(text=BT.TIMER),
-        ],
-    ],
-    resize_keyboard=True,
-    input_field_placeholder='Главное меню',
-)
-
 only_main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [
@@ -49,4 +34,51 @@ cancel_mk = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
     one_time_keyboard=True
+)
+
+main_menu_user_with_admin_option_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.SEARCH_RECIPES),
+            KeyboardButton(text=BT.ADD_RECIPE),
+        ],
+        [
+            KeyboardButton(text=BT.PROFILE),
+            KeyboardButton(text=BT.TIMER),
+        ],
+        [
+            KeyboardButton(text=BT.ADMIN_PANEL),
+        ]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder='Главное меню'
+)
+
+
+main_menu_user_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.SEARCH_RECIPES),
+            KeyboardButton(text=BT.ADD_RECIPE),
+        ],
+        [
+            KeyboardButton(text=BT.PROFILE),
+            KeyboardButton(text=BT.TIMER),
+        ]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder='Главное меню',
+)
+
+main_menu_admin_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.CHECK_REPORTS),
+        ],
+        [
+            KeyboardButton(text=BT.USER_PANEL),
+        ]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder='Главное меню',
 )
