@@ -1,25 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from keyboards.button_text import ButtonText as BT
-from keyboards.factories import DeleteRecipeCallback
-from keyboards.constants import DeleteRecipeAction
-
-search_type_panel = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(text=BT.SEARCH_BY_TITLE, callback_data='choose_search_type_by_name')
-        ],
-        [
-            InlineKeyboardButton(text=BT.SEARCH_BY_AUTHOR, callback_data='choose_search_type_by_author')
-        ],
-        [
-            InlineKeyboardButton(text=BT.SEARCH_ALL_RECIPES, callback_data='choose_search_type_by_all')
-        ],
-        [
-            InlineKeyboardButton(text=BT.PREV, callback_data='back_to_choose_category'),
-        ],
-    ]
-)
+from keyboards.factories import BackCallback, DeleteRecipeCallback
+from keyboards.constants import DeleteRecipeAction, BackToType
 
 confirm_delete_recipe = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -32,3 +15,12 @@ confirm_delete_recipe = InlineKeyboardMarkup(
     ]
 )
 
+repeat_search_panel = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text=BT.SEARCH_REPEAT,
+                                 callback_data=BackCallback(back_to_type=BackToType.CHOOSE_SEARCH_TYPE,
+                                                            change_kb=True).pack())
+        ]
+    ]
+)

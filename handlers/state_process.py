@@ -1,47 +1,21 @@
 import asyncio
 
-from aiogram import Router, F, Bot
+from aiogram import Router, F
 from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import any_state
 from aiogram.types import Message
 
-from keyboards import cancel_mk
+from keyboards.reply import cancel_mk
+from keyboards.inline import repeat_search_panel
 from keyboards.constants import RecipeChangeItem
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe
 from database.redis_client import rc
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm, EditRecipeForm, DeleteRecipeForm
-from misc.utils import extract_recipe_info, get_main_kb, set_timer, send_user_recipe_info, \
+from misc.utils import get_main_kb, set_timer, send_user_recipe_info, \
     convert_ids_list_into_objects, cache_list_update
 
 router = Router(name='states_process')
-
-
-# @router.message(AddRecipeForm.recipe, F.text)
-# async def add_recipe_form(message: Message, state: FSMContext):
-#     tg_id = message.from_user.id
-#     if message.text == BT.CANCEL:
-#         await message.answer('Отменено.', reply_markup=get_main_kb(tg_id))
-#         await state.clear()
-#         return
-#
-#     title, url = extract_recipe_info(message.text)
-#     if not url.startswith('https://telegra.ph'):
-#         await message.answer('Ссылка должна быть на статью в телеграф!!')
-#         return
-#
-#     user = await User.get(tg_id=tg_id)
-#     category = (await state.get_data())['category']
-#
-#     await Recipe.create(title=title, url=url, creator=user, category=category)
-#     await message.answer('Рецепт успешно добавлен!', reply_markup=get_main_kb(tg_id))
-#     await state.clear()
-
-
-# @router.message(AddRecipeForm.recipe, ~F.text)
-# async def invalid_add_recipe_form(message: Message, state: FSMContext):
-#     await message.answer('Принимается только текст.')
 
 
 @router.message(AddRecipeForm.title, F.text)
@@ -57,36 +31,51 @@ async def process_addrecipeform_title(message: Message, state: FSMContext):
     await state.set_state(AddRecipeForm.url)
 
 
-@router.message(AddRecipeForm.url, F.text)
+@router.message(AddRecipeForm.url, F.text.startswith('https://telegra.ph/'))
 async def process_addrecipeform_url(message: Message, state: FSMContext):
     tg_id = message.chat.id
     user = await User.get(tg_id=tg_id)
+    data = await state.get_data()
     if message.text == BT.CANCEL:
         await message.answer('Отменено.', reply_markup=get_main_kb(tg_id))
         await state.clear()
         return
 
-    title = (await state.get_data())['title']
-    if Recipe.filter(url=message.text).exists():
+    title = data['title']
+    category = data['category']
+
+    if await Recipe.filter(url=message.text).exists():
         await message.answer('Данный рецепт уже добавлен!', reply_markup=cancel_mk)
         return
 
-    await Recipe.create(title=title, url=message.text, user=user)
+    await Recipe.create(title=title, url=message.text, creator=user, category=category)
     await message.answer('Рецепт успешно добавлен.', reply_markup=get_main_kb(tg_id))
     await state.clear()
 
 
-@router.message(SearchRecipeForm.get_user_input, F.text)
+@router.message(AddRecipeForm.url, ~F.text.startswith('https://telegraph/'))
+async def process_invalid_addrecipeform_url(message: Message, state: FSMContext):
+    if message.text == BT.CANCEL:
+        await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id))
+        await state.clear()
+        return
+
+    await message.answer('Ссылка должна быть на статью в https://telegra.ph/ !. Повторите попытку.')
+
+
+@router.message(SearchRecipeForm.process_user_input, F.text)
 async def search_recipe_form_by_category(message: Message, state: FSMContext):
     if message.text == BT.CANCEL:
         await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id, only_menu=True))
-        await state.set_state(SearchRecipeForm.search_type)
+        await state.set_state(SearchRecipeForm.ask_user_input)
         return
 
     await message.bot.send_chat_action(chat_id=message.chat.id,
                                        action=ChatAction.TYPING)
-    search_type = (await state.get_data())['search_type']
-    category = (await state.get_data())['category']
+    data = await state.get_data()
+    search_type = data['search_type']
+    category = data['category']
+    message_to_delete = data['message']
     prompt = message.text
 
     if search_type == 'name':
@@ -101,19 +90,21 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
         ids = await pre_result.filter(category=category).values_list('id', flat=True)
 
     if not ids:
-        await message.answer('По вашему запросу не найдено рецептов. Повторите попытку.',
-                             reply_markup=get_main_kb(message.chat.id, True))
+        await message.answer('По вашему запросу не найдено . Повторите попытку.',
+                             reply_markup=repeat_search_panel)
         return
 
+    await message_to_delete.delete()
+    
     client = rc.get_client()
-    key = str(message.chat.id)
+    key = f'{message.chat.id}'
     cache_list_update(client, key, ids)
     result = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
-    await send_user_recipe_info(result, message, category)
+    await send_user_recipe_info(result, message, category, print_find=False)
     await state.clear()
 
 
-@router.message(SearchRecipeForm.get_user_input, ~F.text)
+@router.message(SearchRecipeForm.process_user_input, ~F.text)
 async def invalid_search_recipe_form(message: Message, state: FSMContext):
     await message.answer('Отправьте текстом!')
 
@@ -127,7 +118,7 @@ async def set_timer_form(message: Message, state: FSMContext):
     await asyncio.create_task(set_timer(message, minutes))
 
 
-@router.message(SetTimerForm.minutes, ~F.text | ~F.text.isdigit())
+@router.message(SetTimerForm.minutes, ~F.text | ~F.text.isdigit() | F.text.func(lambda x: int(x) <= 0))
 async def invalid_set_timer_form(message: Message, state: FSMContext):
     if message.text == BT.CANCEL:
         await message.answer('Отменено.', reply_markup=get_main_kb(message.chat.id))

@@ -2,9 +2,11 @@ import logging
 import asyncio
 
 from aiogram.client.default import DefaultBotProperties
+from aiogram.exceptions import TelegramNetworkError
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher
 from tortoise import Tortoise
+from redis.exceptions import ConnectionError
 
 from database.connection import init
 from misc.routers import router
@@ -43,3 +45,6 @@ if __name__ == '__main__':
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logging.info('Bot stopped successfully.')
+    except (TelegramNetworkError, ConnectionError):
+        logging.warning('Bot stopped during and error.')
+        exit(1)

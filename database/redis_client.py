@@ -27,7 +27,7 @@ class RedisClient:
             self.client.ping()
         except ConnectionError:
             logging.error('Error while connecting to redis.')
-            raise SystemExit
+            raise ConnectionError
 
     def disconnect(self):
         if self.client:

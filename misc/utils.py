@@ -5,9 +5,11 @@ from typing import Any
 
 from aiogram.types import Message
 from tortoise import models
+from tortoise.expressions import Q
 
-from keyboards.builders import user_recipe_panel, user_recipe_change_panel
+from keyboards.builders import single_recipe_change_panel, user_recipe_panel, user_recipe_change_panel, single_recipe_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu, main_menu_admin_kb, main_menu_user_with_admin_option_kb
+from keyboards.inline import repeat_search_panel
 from misc.config import ADMINS
 from database.models import Recipe, Category, User
 
@@ -29,25 +31,17 @@ def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
     return main_menu_user_kb
 
 
-def extract_recipe_info(text):
-    lines = text.strip().split('\n')
-
-    name_line = lines[0].strip()
-    url_line = lines[1].strip()
-
-    name_match = re.match(r"^\d+\)\s*(.+)", name_line)
-    name = name_match.group(1) if name_match else None
-
-    url_match = re.match(r"^\d+\)\s*(https?://[^\s]+)", url_line)
-    url = url_match.group(1) if url_match else None
-
-    return name, url
-
-
 async def set_timer(message: Message, timer_minutes: int):
     timer_second = timer_minutes * 60
     await asyncio.sleep(timer_second)
     await message.reply('Время истекло!')
+
+
+async def check_recipe_in_favourites(recipe_id: int, user_tg_id: int) -> bool:
+    recipe = await Recipe.get(id=recipe_id)
+    user = await User.get(tg_id=user_tg_id)
+    favourite_recipes = await user.favourite_recipes.all()
+    return recipe in favourite_recipes
 
 
 async def send_user_recipe_info(recipes_list: list[Recipe] | list[models.Model],
@@ -56,6 +50,10 @@ async def send_user_recipe_info(recipes_list: list[Recipe] | list[models.Model],
                                 edit_msg: bool = False,
                                 print_find: bool = True,
                                 page: int = 0):
+    if not recipes_list:
+        await message.answer('Время хранения данных истекло. Произведите новый поиск.', reply_markup=repeat_search_panel)
+        return
+
     recipe = recipes_list[page]
     user = await User.get(tg_id=message.chat.id).prefetch_related('favourite_recipes')
     favourite = recipe in await user.favourite_recipes.all()
@@ -101,6 +99,18 @@ async def send_user_recipe_change(recipes_list: list[Recipe] | list[models.Model
         await message.edit_reply_markup(reply_markup=reply_markup)
 
 
+async def send_single_recipe(recipe: Recipe, message: Message, edit: bool = False):
+    favourite = await check_recipe_in_favourites(recipe.id, message.chat.id)
+    text = f"""<b>{recipe.title}</b>
+Категория: {recipe.category.title}
+Автор: {recipe.creator.name}
+{recipe.url}"""
+    if edit:
+        await message.answer(text, reply_markup=single_recipe_change_panel(recipe.id))
+    else:
+        await message.answer(text, reply_markup=single_recipe_panel(recipe.id, favourite))
+
+
 def get_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
     if issubclass(types, int):
         lst = [int(item) for item in client.lrange(key, 0, -1)]
@@ -118,3 +128,4 @@ async def convert_ids_list_into_objects(ids_list: list[int], model: models.Model
 def cache_list_update(client: redis.Redis, key: str, lst: list) -> None:
     client.delete(key)
     client.lpush(key, *lst)
+    client.expire(key, 60 * 15)

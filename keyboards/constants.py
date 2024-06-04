@@ -21,3 +21,14 @@ class RecipeChangeItem(StrEnum):
 class DeleteRecipeAction(StrEnum):
     CONFIRM = 'confirm'
     CANCEL = 'cancel'
+
+
+class SearchType(StrEnum):
+    POPULAR = 'popular'
+    ALL_RECIPES = 'all'
+    BY_CATEGORY = 'by_category'
+
+
+class BackToType(StrEnum):
+    CHOOSE_CATEGORY = 'category'
+    CHOOSE_SEARCH_TYPE = 'search_type'

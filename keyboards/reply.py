@@ -47,6 +47,9 @@ main_menu_user_with_admin_option_kb = ReplyKeyboardMarkup(
             KeyboardButton(text=BT.TIMER),
         ],
         [
+            KeyboardButton(text=BT.RANDOM_RECIPE),
+        ],
+        [
             KeyboardButton(text=BT.ADMIN_PANEL),
         ]
     ],
@@ -64,6 +67,9 @@ main_menu_user_kb = ReplyKeyboardMarkup(
         [
             KeyboardButton(text=BT.PROFILE),
             KeyboardButton(text=BT.TIMER),
+        ],
+        [
+            KeyboardButton(text=BT.RANDOM_RECIPE),
         ]
     ],
     resize_keyboard=True,

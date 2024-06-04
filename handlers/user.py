@@ -1,15 +1,17 @@
+import random
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import cancel_mk, profile_mk
+from keyboards import cancel_mk, profile_mk, search_type_panel
 from keyboards.builders import categories
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
 from misc.utils import get_main_kb, send_user_recipe_info, cache_list_update, convert_ids_list_into_objects, \
-    send_user_recipe_change
+    send_user_recipe_change, send_single_recipe
 from database.redis_client import rc
 
 router = Router(name='user_handlers')
@@ -54,7 +56,7 @@ async def set_timer(message: Message, state: FSMContext):
 
 @router.message(F.text == BT.PROFILE)
 @router.message(Command('profile'))
-async def settings(message: Message):
+async def profile(message: Message):
     tg_id = message.from_user.id
     user = await User.get(tg_id=tg_id).prefetch_related('favourite_recipes')
     favourite_recipes = await user.favourite_recipes.all().count()
@@ -115,7 +117,19 @@ async def user_recipes(message: Message, state: FSMContext):
 @router.message(F.text == BT.SEARCH_RECIPES)
 @router.message(Command('search_recipe'))
 async def search_recipe(message: Message, state: FSMContext):
-    await message.answer('Вы перешли к выбору категории.', reply_markup=get_main_kb(message.chat.id, True))
-    await message.answer('Выберите категорию, в которой хотите искать рецепт:',
-                         reply_markup=await categories('select_category_to_search_recipe_', show_all_recipes=True))
-    await state.set_state(SearchRecipeForm.category)
+    await message.answer('Вы перешли к выбору варианта поиска.', reply_markup=get_main_kb(message.from_user.id, True))
+    await message.answer('Выберите вариант поиска:', reply_markup=await search_type_panel())
+    await state.set_state(SearchRecipeForm.search_type)
+
+
+@router.message(F.text == BT.RANDOM_RECIPE)
+@router.message(Command('random_recipe'))
+async def random_recipe(message: Message):
+    all_recipes = await Recipe.all().prefetch_related('creator', 'category')
+    recipe = random.choice(all_recipes)
+    await send_single_recipe(recipe, message)
+
+
+@router.message()
+async def handle_all_messages(message: Message):
+    await message.reply('Извините, мне такая команда неизвестна.')

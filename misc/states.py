@@ -3,15 +3,15 @@ from aiogram.fsm.state import StatesGroup, State
 
 class AddRecipeForm(StatesGroup):
     category = State()
-    recipe = State()
     title = State()
     url = State()
 
 
 class SearchRecipeForm(StatesGroup):
-    category = State()
     search_type = State()
-    get_user_input = State()
+    category = State()
+    ask_user_input = State()
+    process_user_input = State()
 
 
 class EditRecipeForm(StatesGroup):

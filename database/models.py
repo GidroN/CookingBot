@@ -8,9 +8,15 @@ class User(models.Model):
     # is_admin = fields.BooleanField(default=False)
     favourite_recipes = fields.ManyToManyField('models.Recipe', related_name='favourite_by', through='userfavouriterecipe')
 
+    def __str__(self):
+        return f'{self.name} - {self.username} - {self.tg_id}'
+
 
 class Category(models.Model):
     title = fields.CharField(max_length=60)
+
+    def __str__(self):
+        return self.title
 
 
 class Recipe(models.Model):
@@ -19,6 +25,9 @@ class Recipe(models.Model):
     date = fields.DatetimeField(auto_now_add=True)
     category = fields.ForeignKeyField('models.Category', on_delete=fields.CASCADE, related_name='recipe_category')
     creator = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='recipe_creator')
+
+    def __str__(self):
+        return f'{self.title}'
 
 
 class UserFavouriteRecipe(models.Model):
@@ -29,4 +38,3 @@ class UserFavouriteRecipe(models.Model):
 class Report(models.Model):
     recipe = fields.ForeignKeyField('models.Recipe', on_delete=fields.CASCADE, related_name='recipe_report')
     user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='user_report')
-
