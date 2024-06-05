@@ -2,7 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 
 from keyboards.constants import (PaginationAction,
                                  PaginationMarkup,
-                                 RecipeChangeItem, SearchType, BackToType, )
+                                 RecipeChangeItem, SearchType, BackToType, ChooseSearchTypeAction, )
 
 
 class RecipePaginationCallback(CallbackData, prefix='pag'):
@@ -31,10 +31,16 @@ class DeleteRecipeCallback(CallbackData, prefix='delete_recipe'):
     action: str
 
 
-class BackCallback(CallbackData, prefix='back_to_choose_category'):
+class BackCallback(CallbackData, prefix='back_to'):
     back_to_type: BackToType
     change_kb: bool
 
 
 class ChooseSearchTypeCallback(CallbackData, prefix='choose_search_type'):
     type: SearchType
+
+
+ # After choosing category
+class ChooseSearchTypeByCategoryCallback(CallbackData, prefix='choose_search_type_by_category'):
+    # category_id in state data
+    search_type: ChooseSearchTypeAction

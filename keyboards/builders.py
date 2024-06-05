@@ -2,10 +2,10 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.models import Category, Recipe
-from keyboards import BackToType, ChooseSearchTypeCallback, SearchType, BackCallback
+from keyboards import BackToType, ChooseSearchTypeCallback, SearchType, ChooseSearchTypeAction
 from keyboards.factories import RecipePaginationCallback, PaginationAction, PaginationMarkup, \
     AddRecipeToFavouritesCallback, \
-    ReportRecipeCallback, ChangeRecipeInfoCallback, RecipeChangeItem, BackCallback
+    ReportRecipeCallback, ChangeRecipeInfoCallback, RecipeChangeItem, BackCallback, ChooseSearchTypeByCategoryCallback
 from keyboards.button_text import ButtonText as BT
 
 
@@ -134,9 +134,15 @@ def search_by_category_panel(back_to: str):
 
     keyboard = InlineKeyboardBuilder()
     keyboard.add(
-        InlineKeyboardButton(text=BT.SEARCH_BY_TITLE, callback_data='choose_search_type_by_name'),
-        InlineKeyboardButton(text=BT.SEARCH_BY_AUTHOR, callback_data='choose_search_type_by_author'),
-        InlineKeyboardButton(text=BT.SEARCH_ALL_RECIPES, callback_data='choose_search_type_by_all'),
+        InlineKeyboardButton(text=BT.SEARCH_BY_TITLE,
+                             callback_data=ChooseSearchTypeByCategoryCallback(
+                                 search_type=ChooseSearchTypeAction.SEARCH_BY_TITLE).pack()),
+        InlineKeyboardButton(text=BT.SEARCH_BY_AUTHOR,
+                             callback_data=ChooseSearchTypeByCategoryCallback(
+                                 search_type=ChooseSearchTypeAction.SEARCH_BY_AUTHOR).pack()),
+        InlineKeyboardButton(text=BT.SEARCH_ALL_RECIPES,
+                             callback_data=ChooseSearchTypeByCategoryCallback(
+                                 search_type=ChooseSearchTypeAction.SEARCH_ALL).pack()),
     )
 
     if back_to == 'choose_search_type':

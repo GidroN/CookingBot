@@ -9,13 +9,14 @@ from database.redis_client import rc
 from keyboards import (cancel_mk, RecipePaginationCallback,
                        AddRecipeToFavouritesCallback, PaginationMarkup, RecipeChangeItem,
                        confirm_delete_recipe, DeleteRecipeAction, search_by_category_panel, SearchType, BackToType,
-                       search_type_panel)
+                       search_type_panel, ChooseSearchTypeAction)
 from keyboards.builders import categories, user_recipe_panel, single_recipe_panel
 from keyboards.button_text import ButtonText as BT
 from keyboards.factories import ReportRecipeCallback, ChangeRecipeInfoCallback, DeleteRecipeCallback, \
-    BackCallback, ChooseSearchTypeCallback
+    BackCallback, ChooseSearchTypeCallback, ChooseSearchTypeByCategoryCallback
 from misc.states import AddRecipeForm, SearchRecipeForm, EditRecipeForm, DeleteRecipeForm
-from misc.utils import check_recipe_in_favourites, get_main_kb, send_user_recipe_info, get_list_from_cache, convert_ids_list_into_objects, \
+from misc.utils import check_recipe_in_favourites, get_main_kb, send_user_recipe_info, get_list_from_cache, \
+    convert_ids_list_into_objects, \
     cache_list_update, send_user_recipe_change
 
 router = Router(name='user_callbacks')
@@ -59,7 +60,7 @@ async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearc
         # result = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
         # await send_user_recipe_info(result, callback.message)
         # await state.clear()
-    else: # all
+    else:  # all
         await callback.answer('Производится поиск по всем рецептам.')
         await callback.message.edit_text('Выберите вариант поиска:')
         await callback.message.edit_reply_markup(reply_markup=search_by_category_panel('choose_search_type'))
@@ -113,27 +114,27 @@ async def back_to_choose_category(callback: CallbackQuery, callback_data: BackCa
     await state.set_state(SearchRecipeForm.category)
 
 
-@router.callback_query(SearchRecipeForm.ask_user_input, F.data.startswith('choose_search_type_by_'))
-async def choose_search_type(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(SearchRecipeForm.ask_user_input, ChooseSearchTypeByCategoryCallback.filter())
+async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearchTypeByCategoryCallback, state: FSMContext):
     search_type = callback.data.split('_')[-1]
     data = await state.get_data()
     category = data['category']
     message_to_delete = data['message']
 
-    if search_type == 'name':
+    if callback_data.search_type == ChooseSearchTypeAction.SEARCH_BY_TITLE:
         await callback.answer('Вы выбрали поиск по названию.')
         await callback.message.answer('Введите название рецепта', reply_markup=cancel_mk)
 
-    elif search_type == 'author':
+    elif callback_data.search_type == ChooseSearchTypeAction.SEARCH_BY_AUTHOR:
         await callback.answer(f'Вы выбрали поиск по автору')
         await callback.message.answer('Введите запрос', reply_markup=cancel_mk)
 
-    elif search_type == 'all':
-        if category: # all in category
+    else: #all
+        if category:  # all in category
             await callback.answer(f'Производится поиск по самым новым рецептам в категории {category.title}')
             client = rc.get_client()
             ids = await Recipe.filter(category=category).values_list('id', flat=True)
-        else: # all without category
+        else:  # all without category
             await callback.answer(f'Производится поиск по самым новым рецептам.')
             client = rc.get_client()
             ids = await Recipe.all().values_list('id', flat=True)
@@ -301,4 +302,3 @@ async def process_recipe_edit_category(callback: CallbackQuery, state: FSMContex
     await callback.message.delete()
 
     await state.clear()
-

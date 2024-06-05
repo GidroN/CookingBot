@@ -32,3 +32,9 @@ class SearchType(StrEnum):
 class BackToType(StrEnum):
     CHOOSE_CATEGORY = 'category'
     CHOOSE_SEARCH_TYPE = 'search_type'
+
+
+class ChooseSearchTypeAction(StrEnum):
+    SEARCH_BY_TITLE = 'title'
+    SEARCH_BY_AUTHOR = 'author'
+    SEARCH_ALL = 'all'
