@@ -6,6 +6,7 @@ from typing import Any
 from aiogram.types import Message
 from tortoise import models
 from tortoise.expressions import Q
+from tortoise.functions import Count
 
 from keyboards.builders import single_recipe_change_panel, user_recipe_panel, user_recipe_change_panel, single_recipe_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu, main_menu_admin_kb, main_menu_user_with_admin_option_kb
@@ -129,3 +130,11 @@ def cache_list_update(client: redis.Redis, key: str, lst: list) -> None:
     client.delete(key)
     client.lpush(key, *lst)
     client.expire(key, 60 * 15)
+
+
+async def get_popular_recipes() -> list[Recipe]:
+    recipes = await Recipe.annotate(
+        favourite_count=Count('recipe_favourites')
+    ).order_by('-favourite_count', 'title').all()
+
+    return recipes
