@@ -1,9 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from keyboards.callback_constants import CallbackConstants
 from keyboards.button_text import ButtonText as BT
 from keyboards.factories import BackCallback, DeleteRecipeCallback
-from keyboards.factory_constants import DeleteRecipeAction, BackToType
+from constants.factory import DeleteRecipeAction, BackToType
 
 confirm_delete_recipe = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -37,3 +36,13 @@ admin_panel = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+user_agreement_panel = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text=BT.READ_AGREEMENT, url='https://telegra.ph/Agreement-06-09-6')
+        ]
+    ]
+)
+

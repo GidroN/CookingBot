@@ -1,12 +1,16 @@
 from aiogram.filters.callback_data import CallbackData
 
-from keyboards.factory_constants import (PaginationAction,
-                                         PaginationMarkup,
-                                         RecipeChangeItem,
-                                         SearchType,
-                                         BackToType,
-                                         ChooseSearchTypeAction,
-                                         PaginationKey, UserChangeItem, )
+from constants.factory import (PaginationAction,
+                               PaginationMarkup,
+                               RecipeChangeItem,
+                               SearchType,
+                               BackToType,
+                               ChooseSearchTypeAction,
+                               PaginationKey, UserChangeItem, )
+
+
+class UserRegisterCallback(CallbackData, prefix='user_register'):
+    tg_id: int
 
 
 class PaginationCallback(CallbackData, prefix='pag'):
@@ -66,3 +70,7 @@ class WarnUserCallback(CallbackData, prefix='warn_user'):
 class ChangeUserInfoCallback(CallbackData, prefix='change_user_info'):
     tg_id: int
     change_item: UserChangeItem
+
+
+class UserAgreeAgreementCallback(CallbackData, prefix='agree_agreement'):
+    tg_id: int

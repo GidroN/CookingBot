@@ -37,3 +37,7 @@ class GetWarnReasonForm(StatesGroup):
 
 class EditUserForm(StatesGroup):
     get_user_input = State()
+
+
+class RegisterUserForm(StatesGroup):
+    agreement = State()

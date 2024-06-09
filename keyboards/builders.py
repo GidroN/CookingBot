@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.models import Category, Recipe, Report
@@ -6,7 +6,7 @@ from keyboards import (BackToType, ChooseSearchTypeAction,
                        ChooseSearchTypeCallback, PaginationKey, SearchType,
                        UserChangeItem)
 from keyboards.button_text import ButtonText as BT
-from keyboards.callback_constants import CallbackConstants
+from constants.callback import CallbackConstants
 from keyboards.factories import (AddRecipeToFavouritesCallback, BackCallback,
                                  ChangeRecipeInfoCallback,
                                  ChangeUserInfoCallback, CheckReportsCallback,
@@ -21,7 +21,7 @@ async def categories(prefix: str, prev: bool = True, cancel: bool = False):
     all_categories = await Category.all()
     keyboard = InlineKeyboardBuilder()
     for item in all_categories:
-        category_items = await Recipe.filter(category=item).count()
+        category_items = await Recipe.filter(category=item, is_active=True).count()
         keyboard.add(InlineKeyboardButton(text=f"{item.title} ({category_items})", callback_data=f'{prefix}{item.id}'))
     keyboard.adjust(2)
     if prev:
@@ -132,7 +132,7 @@ def single_recipe_change_panel(recipe_id: int):
 async def search_type_panel():
     keyboard = InlineKeyboardBuilder()
     all_categories = await Category.all().count()
-    all_recipes = await Recipe.all().count()
+    all_recipes = await Recipe.filter(is_active=True).count()
 
     keyboard.add(
         InlineKeyboardButton(text=BT.SEARCH_POPULAR,

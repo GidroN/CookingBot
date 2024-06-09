@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state, default_state
 from aiogram.types import CallbackQuery, Message
 
+from constants.callback import CallbackConstants
 from database.models import Category, Recipe, Report, User, UserFavouriteRecipe
 from database.redis_client import rc
 from keyboards import (AddRecipeToFavouritesCallback, BackToType,
@@ -18,9 +19,9 @@ from keyboards.factories import (BackCallback, ChangeRecipeInfoCallback,
                                  ChangeUserInfoCallback,
                                  ChooseSearchTypeByCategoryCallback,
                                  ChooseSearchTypeCallback,
-                                 DeleteRecipeCallback, ReportRecipeCallback)
+                                 DeleteRecipeCallback, ReportRecipeCallback, UserAgreeAgreementCallback)
 from misc.states import (AddRecipeForm, DeleteRecipeForm, EditRecipeForm,
-                         EditUserForm, GetReportReasonForm, SearchRecipeForm)
+                         EditUserForm, GetReportReasonForm, SearchRecipeForm, RegisterUserForm)
 from misc.utils import (cache_list_update, check_recipe_in_favourites,
                         convert_ids_list_into_objects, get_list_from_cache,
                         get_main_kb, get_popular_recipes,
@@ -28,14 +29,6 @@ from misc.utils import (cache_list_update, check_recipe_in_favourites,
                         send_user_recipe_change, send_user_recipe_info)
 
 router = Router(name='user_callbacks')
-
-
-# @router.message(F.text == BT.MAIN_MENU)
-# @router.message(Command('menu'))
-# async def menu(message: Message, state: FSMContext):
-#     tg_id = message.from_user.id
-#     await state.clear()
-#     await message.answer('🏠 Вы перешли в главное меню', reply_markup=await get_main_kb(tg_id))
 
 
 @router.callback_query(AddRecipeForm.category, F.data.startswith('select_category_to_add_recipe_'))
@@ -124,7 +117,6 @@ async def back_to_choose_category(callback: CallbackQuery, callback_data: BackCa
 
 @router.callback_query(SearchRecipeForm.ask_user_input, ChooseSearchTypeByCategoryCallback.filter())
 async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearchTypeByCategoryCallback, state: FSMContext):
-    search_type = callback.data.split('_')[-1]
     data = await state.get_data()
     category = data['category']
     message_to_delete = data['message']
@@ -132,10 +124,12 @@ async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearc
     if callback_data.search_type == ChooseSearchTypeAction.SEARCH_BY_TITLE:
         await callback.answer('Вы выбрали поиск по названию.')
         await callback.message.answer('Введите название рецепта', reply_markup=cancel_mk)
+        await state.update_data(search_type='name')
 
     elif callback_data.search_type == ChooseSearchTypeAction.SEARCH_BY_AUTHOR:
         await callback.answer(f'Вы выбрали поиск по автору')
         await callback.message.answer('Введите запрос', reply_markup=cancel_mk)
+        await state.update_data(search_type='author')
 
     else:  # callback_data.search_type == ChooseSearchTypeAction.SEARCH_ALL
         await callback.bot.send_chat_action(chat_id=callback.message.chat.id,
@@ -143,11 +137,11 @@ async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearc
         if category:  # all in category
             await callback.answer(f'Производится поиск по самым новым рецептам в категории {category.title}')
             client = rc.get_client()
-            ids = await Recipe.filter(category=category).values_list('id', flat=True)
+            ids = await Recipe.filter(category=category, is_active=True).values_list('id', flat=True)
         else:  # all without category
             await callback.answer(f'Производится поиск по самым новым рецептам.')
             client = rc.get_client()
-            ids = await Recipe.all().values_list('id', flat=True)
+            ids = await Recipe.filter(is_active=True).values_list('id', flat=True)
 
         await message_to_delete.delete()
         key = f'{callback.message.chat.id}'
@@ -158,7 +152,6 @@ async def choose_search_type(callback: CallbackQuery, callback_data: ChooseSearc
         return
 
     await state.set_state(SearchRecipeForm.process_user_input)
-    await state.update_data(search_type=search_type)
 
 
 @router.callback_query(default_state, PaginationCallback.filter())

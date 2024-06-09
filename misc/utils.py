@@ -17,8 +17,11 @@ from database.models import Recipe, Category, User, Report
 
 
 async def is_admin(tg_id: int) -> bool:
-    user = await User.get(tg_id=tg_id)
-    return user.is_admin    
+    if await User.filter(tg_id=tg_id).exists():
+        user = await User.get(tg_id=tg_id)
+        return user.is_admin    
+
+    return False
 
 
 async def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
@@ -183,6 +186,6 @@ def cache_list_update(client: redis.Redis, key: str, lst: list) -> None:
 def get_popular_recipes() -> QuerySet[models.MODEL]:
     recipes = Recipe.annotate(
         favourite_count=Count('recipe_favourites')
-    ).order_by('-favourite_count', 'title').all()
+    ).order_by('-favourite_count', 'title').filter(is_active=True)
 
     return recipes

@@ -8,15 +8,34 @@ from aiogram.types import Message
 from database.models import Recipe, Report, User
 from database.redis_client import rc
 from keyboards.button_text import ButtonText as BT
-from keyboards.factory_constants import RecipeChangeItem, UserChangeItem
+from constants.factory import RecipeChangeItem, UserChangeItem
 from keyboards.inline import repeat_search_panel
 from keyboards.reply import cancel_mk, profile_mk
 from misc.states import (AddRecipeForm, EditRecipeForm, EditUserForm,
-                         GetReportReasonForm, SearchRecipeForm, SetTimerForm)
+                         GetReportReasonForm, SearchRecipeForm, SetTimerForm, RegisterUserForm)
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_main_kb, send_user_recipe_info, set_timer)
 
 router = Router(name='states_process')
+
+
+@router.message(RegisterUserForm.agreement, F.text == BT.AGREE_AGREEMENT)
+async def user_agree_agreement(message: Message, state: FSMContext):
+    user = message.from_user
+    tg_id = user.id
+    full_name = user.first_name
+
+    if user.last_name:
+        full_name += " " + user.last_name
+
+    await User.create(tg_id=tg_id, name=full_name, username=user.username)
+    await message.answer('Вы согласились на условия использования бота.', reply_markup=await get_main_kb(tg_id))
+    await state.clear()
+
+
+@router.message(RegisterUserForm.agreement, F.text != BT.AGREE_AGREEMENT)
+async def invalid_user_agree_agreement(message: Message, state: FSMContext):
+    await message.answer('Вы не согласились, с условиями использования!')
 
 
 @router.message(AddRecipeForm.title, F.text)
@@ -81,12 +100,11 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
     category = data['category']
     message_to_delete = data['message']
     prompt = message.text
-
     if search_type == 'name':
-        pre_result = Recipe.filter(title__icontains=prompt)
+        pre_result = Recipe.filter(title__icontains=prompt, is_active=True)
 
     else:  # search_type == 'author':
-        pre_result = Recipe.filter(creator__name__icontains=prompt)
+        pre_result = Recipe.filter(creator__name__icontains=prompt, is_active=True)
 
     ids = await pre_result.all().values_list('id', flat=True)
 
@@ -166,8 +184,8 @@ async def process_reason_input(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    if message.text == BT.SKIP:
-        reason = None
+    # if message.text == BT.SKIP:
+    #     reason = None
 
     await Report.create(user=user, recipe=recipe, reason=reason)
     await message.answer('Ваша жалоба записана.', reply_markup=await get_main_kb(message.from_user.id, True))

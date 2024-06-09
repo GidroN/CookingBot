@@ -1,6 +1,7 @@
 from aiogram.types import (KeyboardButton, ReplyKeyboardMarkup,
-                           ReplyKeyboardRemove)
+                           ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton)
 
+from constants.callback import CallbackConstants
 from .button_text import ButtonText as BT
 
 rmk = ReplyKeyboardRemove()
@@ -95,9 +96,9 @@ main_menu_admin_kb = ReplyKeyboardMarkup(
 
 cancel_or_skip_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text=BT.SKIP),
-        ],
+        # [
+        #     KeyboardButton(text=BT.SKIP),
+        # ],
         [
             KeyboardButton(text=BT.CANCEL),
         ]
@@ -108,8 +109,18 @@ cancel_or_skip_kb = ReplyKeyboardMarkup(
 help_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text=BT.HELP)
+            KeyboardButton(text=BT.DEATH)
         ]
     ],
     resize_keyboard=True,
+)
+
+user_agree_agreement_panel = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.AGREE_AGREEMENT)
+        ]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder='Соглашение.'
 )

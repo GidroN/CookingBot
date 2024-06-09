@@ -44,6 +44,10 @@ async def check_reports(message: Message):
     client = rc.get_client()
     key = f'{message.from_user.id}'
     recipe_ids = list(set(await Report.all().values_list('recipe__id', flat=True)))
+    if not recipe_ids:
+        await message.answer('На данный момент у вас нет активных жалоб')
+        return
+
     cache_list_update(client, key, recipe_ids)
     recipes = await convert_ids_list_into_objects(recipe_ids, Recipe, ['category', 'creator'])
     await send_recipe_to_check_reports(recipes, message, client)

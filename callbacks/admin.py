@@ -6,11 +6,11 @@ from database.models import Recipe, Report
 from database.redis_client import rc
 from keyboards import (CheckReportsCallback, FalseAlarmRecipeCallback,
                        WarnUserCallback, cancel_mk)
-from keyboards.callback_constants import CallbackConstants as Cb
+from constants.callback import CallbackConstants as Cb
 from misc.states import GetWarnReasonForm
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_list_from_cache, send_recipe_to_check_reports,
-                        send_report_reason)
+                        send_report_reason, get_main_kb)
 
 router = Router(name='admin_callbacks')
 
@@ -54,11 +54,16 @@ async def process_false_alarm(callback: CallbackQuery, callback_data: FalseAlarm
 
     ids = get_list_from_cache(client, key, int)
     ids.remove(recipe_id)
-    cache_list_update(client, key, ids)
-    recipes = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
-    client.delete(reports_key)
-    await callback.answer('Вердикт вынесен.')
-    await send_recipe_to_check_reports(recipes, callback.message, client, edit_msg=True)
+
+    await callback.answer('Вердикт вынесен.', await get_main_kb(callback.from_user.id, show_admin_panel=True))
+
+    if ids:
+        cache_list_update(client, key, ids)
+        recipes = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
+        client.delete(reports_key)
+        await send_recipe_to_check_reports(recipes, callback.message, client, edit_msg=True)
+    else:
+        await callback.message.answer('Вы просмотрели все жалобы.')
 
 
 @router.callback_query(WarnUserCallback.filter())

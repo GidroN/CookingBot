@@ -7,11 +7,13 @@ from aiogram.types import Message
 
 from database.models import Recipe, User
 from database.redis_client import rc
-from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel
-from keyboards.builders import categories
+from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel, user_agreement_panel, \
+    user_agree_agreement_panel
+from keyboards.builders import categories, profile_panel
 from keyboards.button_text import ButtonText as BT
 from misc.filters import IsNotActiveUser
-from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
+from misc.states import (AddRecipeForm, RegisterUserForm, SearchRecipeForm,
+                         SetTimerForm)
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_main_kb, send_single_recipe,
                         send_user_recipe_change, send_user_recipe_info)
@@ -20,16 +22,18 @@ router = Router(name='user_handlers')
 
 
 @router.message(IsNotActiveUser())
-@router.message(IsNotActiveUser(), F.text == BT.HELP)
+@router.message(IsNotActiveUser(), F.text == BT.DEATH)
 async def handle_not_active_user(message: Message):
     user = await User.get(tg_id=message.from_user.id)
     await message.answer(f'<b>Уважаемый пользователь {user.name}! </b>\n'
-                         f'Ваш акканут был заморожен администрацией за трехкратное нарушение правил.\n',
+                         f'Ваш акканут был заблокирован администрацией за трехкратное нарушение правил.\n',
                          reply_markup=help_kb)
 
 
 @router.message(CommandStart())
-async def start(message: Message):
+async def start(message: Message, state: FSMContext):
+    await state.clear()
+
     user = message.from_user
 
     tg_id = user.id
@@ -38,16 +42,16 @@ async def start(message: Message):
     if user.last_name:
         full_name += " " + user.last_name
 
-    username = user.username
-    reply_mk = await get_main_kb(tg_id)
-
-    if username:
-        await message.answer(f'Добро пожаловать, @{user.username}!', reply_markup=reply_mk)
-    else:
-        await message.answer(f'Добро пожаловать!', reply_markup=reply_mk)
-
     if not await User.filter(tg_id=tg_id).exists():
-        await User.create(tg_id=tg_id, name=full_name.strip(), username=username)
+        await message.answer(f'<b>{full_name}, добро пожаловать в нашего бота!</b>\n'
+                             f'Перед тем как начать им пользоваться вам необходимо '
+                             f'ознакомиться с условиями использования бота.',
+                             reply_markup=user_agreement_panel)
+        await message.answer('НАЖИМАЯ НА КНОПКУ НИЖЕ, ВЫ СОГЛАШАЕТЕСЬ С УСЛОВИЯМИ ИСПОЛЬЗОВАНИЯ БОТА.',
+                             reply_markup=user_agree_agreement_panel)
+        await state.set_state(RegisterUserForm.agreement)
+    else:
+        await message.answer(f'С возвращением, @{user.name}!', reply_markup=await get_main_kb(user.tg_id))
 
 
 @router.message(F.text == BT.MAIN_MENU)
@@ -88,10 +92,10 @@ async def profile(message: Message):
     published_recipes = await Recipe.filter(creator=user).count()
     await message.answer('Вы перешли в свой профиль.', reply_markup=profile_mk)
     await message.answer(f'🧑 Ваш профиль:\n'
-                         f'Имя: <b>{user.name}</b>\n'
-                         f'👀 Опубликованные рецепты: <b>{published_recipes}</b>\n'
+                         f'👀 Имя: <b>{user.name}</b>\n'
+                         f'📚 Опубликованные рецепты: <b>{published_recipes}</b>\n'
                          f'♥ Любимые рецепты: <b>{favourite_recipes}</b>',
-                         reply_markup=profile_panel)
+                         reply_markup=await profile_panel(tg_id))
 
 
 @router.message(F.text == BT.ADD_RECIPE)
@@ -108,7 +112,7 @@ async def add_recipe(message: Message, state: FSMContext):
 async def favourite_recipes(message: Message):
     tg_id = str(message.from_user.id)
     user = await User.get(tg_id=tg_id).prefetch_related('favourite_recipes')
-    ids = await user.favourite_recipes.all().prefetch_related('category', 'creator').values_list('id', flat=True)
+    ids = await user.favourite_recipes.filter(is_active=True).prefetch_related('category', 'creator').values_list('id', flat=True)
 
     if not ids:
         await message.answer('У вас пока что нет сохраненных рецептов')
@@ -124,7 +128,7 @@ async def favourite_recipes(message: Message):
 
 @router.message(F.text == BT.MY_RECIPES)
 @router.message(Command('my_recipes'))
-async def user_recipes(message: Message, state: FSMContext):
+async def user_recipes(message: Message):
     tg_id = str(message.from_user.id)
     client = rc.get_client()
     user = await User.get(tg_id=message.from_user.id)
@@ -175,5 +179,5 @@ async def fast_search(message: Message, command: CommandObject):
 
 
 @router.message()
-async def handle_all_messages(message: Message, bot: Bot):
+async def handle_all_messages(message: Message):
     await message.reply('Извините, мне такая команда неизвестна.')
