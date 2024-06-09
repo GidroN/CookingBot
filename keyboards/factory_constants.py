@@ -9,6 +9,13 @@ class PaginationAction(StrEnum):
 class PaginationMarkup(StrEnum):
     VIEWER = 'viewer'
     OWNER = 'owner'
+    ADMIN_RECIPE = 'admin_recipe' # as report recipe view
+    ADMIN_REPORT = 'admin_report'
+
+
+class PaginationKey(StrEnum):
+    DEFAULT = '{message.from_user.id}'
+    ADMIN_REPORT_CHECK = '{message.from_user.id}!report'
 
 
 class RecipeChangeItem(StrEnum):
@@ -38,3 +45,7 @@ class ChooseSearchTypeAction(StrEnum):
     SEARCH_BY_TITLE = 'title'
     SEARCH_BY_AUTHOR = 'author'
     SEARCH_ALL = 'all'
+
+
+class UserChangeItem(StrEnum):
+    NAME = 'name'

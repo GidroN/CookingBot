@@ -25,3 +25,15 @@ class SetTimerForm(StatesGroup):
 
 class DeleteRecipeForm(StatesGroup):
     confirm = State()
+
+
+class GetReportReasonForm(StatesGroup):
+    reason = State()
+
+
+class GetWarnReasonForm(StatesGroup):
+    reason = State()
+
+
+class EditUserForm(StatesGroup):
+    get_user_input = State()

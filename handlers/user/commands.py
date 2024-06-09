@@ -1,20 +1,30 @@
 import random
 
-from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram import Router, F, Bot
+from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import cancel_mk, profile_mk, search_type_panel
+from keyboards import cancel_mk, profile_mk, search_type_panel, help_kb
 from keyboards.builders import categories
 from keyboards.button_text import ButtonText as BT
 from database.models import User, Recipe
+from misc.filters import IsNotActiveUser
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
 from misc.utils import get_main_kb, send_user_recipe_info, cache_list_update, convert_ids_list_into_objects, \
     send_user_recipe_change, send_single_recipe
 from database.redis_client import rc
 
 router = Router(name='user_handlers')
+
+
+@router.message(IsNotActiveUser())
+@router.message(IsNotActiveUser(), F.text == BT.HELP)
+async def handle_not_active_user(message: Message):
+    user = await User.get(tg_id=message.from_user.id)
+    await message.answer(f'<b>Уважаемый пользователь {user.name}! </b>\n'
+                         f'Ваш акканут был заморожен администрацией за трехкратное нарушение правил.\n',
+                         reply_markup=help_kb)
 
 
 @router.message(CommandStart())
@@ -28,7 +38,7 @@ async def start(message: Message):
         full_name += " " + user.last_name
 
     username = user.username
-    reply_mk = get_main_kb(tg_id)
+    reply_mk = await get_main_kb(tg_id)
 
     if username:
         await message.answer(f'Добро пожаловать, @{user.username}!', reply_markup=reply_mk)
@@ -44,7 +54,21 @@ async def start(message: Message):
 async def menu(message: Message, state: FSMContext):
     tg_id = message.from_user.id
     await state.clear()
-    await message.answer('🏠 Вы перешли в главное меню', reply_markup=get_main_kb(tg_id))
+    await message.answer('🏠 Вы перешли в главное меню', reply_markup=await get_main_kb(tg_id))
+
+
+@router.message(Command('help'))
+async def help_command(message: Message):
+    await message.answer('Команды для использования бота:\n'
+                         '<b>/menu</b> - Переход в главное меню\n'
+                         '<b>/timer</b> - Поставить таймер\n'
+                         '<b>/profile</b> - Просмотр профиля\n'
+                         '<b>/my_recipes</b> - Просмотр созданных рецептов\n'
+                         '<b>/fav_recipes</b> - Просмотр сохраненных рецептов\n'
+                         '<b>/search_recipe</b> - Поиск рецептов\n'
+                         '<b>/random_recipe</b> - Случайный рецепт\n'
+                         '<b>/fast_search *ваш запрос*</b> - Быстрый поиск рецептов по названию\n'
+                         '<b>/help - Просмотр данного сообщения.</b>')
 
 
 @router.message(F.text == BT.TIMER)
@@ -61,19 +85,21 @@ async def profile(message: Message):
     user = await User.get(tg_id=tg_id).prefetch_related('favourite_recipes')
     favourite_recipes = await user.favourite_recipes.all().count()
     published_recipes = await Recipe.filter(creator=user).count()
-    await message.answer(f'Ваш профиль:\n'
+    await message.answer('Вы перешли в свой профиль.', reply_markup=profile_mk)
+    await message.answer(f'🧑 Ваш профиль:\n'
                          f'Имя: <b>{user.name}</b>\n'
-                         f'Опубликованные рецепты: <b>{published_recipes}</b>\n'
-                         f'Любимые рецепты: <b>{favourite_recipes}</b>', reply_markup=profile_mk)
+                         f'👀 Опубликованные рецепты: <b>{published_recipes}</b>\n'
+                         f'♥ Любимые рецепты: <b>{favourite_recipes}</b>',
+                         reply_markup=profile_panel)
 
 
 @router.message(F.text == BT.ADD_RECIPE)
 @router.message(Command('add_recipe'))
 async def add_recipe(message: Message, state: FSMContext):
     await state.set_state(AddRecipeForm.category)
-    await message.answer('Вы перешли к выбору категории.', reply_markup=get_main_kb(message.chat.id, True))
+    await message.answer('Вы перешли к выбору категории.', reply_markup=await get_main_kb(message.chat.id, True))
     await message.answer('Чтобы добавить рецепт, сначала выберите категорию, в котoрую хотите добавить:',
-                         reply_markup=await categories('select_category_to_add_recipe_'))
+                         reply_markup=await categories('select_category_to_add_recipe_', prev=False))
 
 
 @router.message(F.text == BT.FAVOURITE_RECIPES)
@@ -117,7 +143,7 @@ async def user_recipes(message: Message, state: FSMContext):
 @router.message(F.text == BT.SEARCH_RECIPES)
 @router.message(Command('search_recipe'))
 async def search_recipe(message: Message, state: FSMContext):
-    await message.answer('Вы перешли к выбору варианта поиска.', reply_markup=get_main_kb(message.from_user.id, True))
+    await message.answer('Вы перешли к выбору варианта поиска.', reply_markup=await get_main_kb(message.from_user.id, True))
     await message.answer('Выберите вариант поиска:', reply_markup=await search_type_panel())
     await state.set_state(SearchRecipeForm.search_type)
 
@@ -130,6 +156,23 @@ async def random_recipe(message: Message):
     await send_single_recipe(recipe, message)
 
 
+@router.message(Command('fast_search'))
+async def fast_search(message: Message, command: CommandObject):
+    prompt = command.args
+
+    if not prompt:
+        await message.answer('Введите поисковой запрос после команды.\n'
+                             'Пример:\n'
+                             '<b>/fast_search</b> Пельмени', reply_markup=await get_main_kb(message.from_user.id, True))
+        return
+
+    recipe = await Recipe.filter(title__icontains=prompt).first().prefetch_related('creator', 'category')
+    if recipe:
+        await send_single_recipe(recipe, message)
+    else:
+        await message.answer('По вашему запросу рецептов не найдено.', reply_markup=await get_main_kb(message.from_user.id, True))
+
+
 @router.message()
-async def handle_all_messages(message: Message):
+async def handle_all_messages(message: Message, bot: Bot):
     await message.reply('Извините, мне такая команда неизвестна.')

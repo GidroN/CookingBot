@@ -4,26 +4,28 @@ import asyncio
 from typing import Any
 
 from aiogram.types import Message
+from redis import Redis
 from tortoise import models
-from tortoise.expressions import Q
 from tortoise.functions import Count
+from tortoise.queryset import QuerySet
 
-from keyboards.builders import single_recipe_change_panel, user_recipe_panel, user_recipe_change_panel, single_recipe_panel
+from keyboards.builders import single_recipe_change_panel, user_recipe_panel, user_recipe_change_panel, \
+    single_recipe_panel, admin_recipe_panel, admin_report_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu, main_menu_admin_kb, main_menu_user_with_admin_option_kb
 from keyboards.inline import repeat_search_panel
-from misc.config import ADMINS
-from database.models import Recipe, Category, User
+from database.models import Recipe, Category, User, Report
 
 
-def is_admin(tg_id: int) -> bool:
-    return tg_id in ADMINS
+async def is_admin(tg_id: int) -> bool:
+    user = await User.get(tg_id=tg_id)
+    return user.is_admin    
 
 
-def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
+async def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
     if only_menu:
         return only_main_menu
 
-    if is_admin(tg_id):
+    if await is_admin(tg_id):
         if show_admin_panel:
             return main_menu_admin_kb
         else:
@@ -62,10 +64,10 @@ async def send_user_recipe_info(recipes_list: list[Recipe] | list[models.Model],
     if print_find:
         if category:
             await message.answer(f'Найдено {len(recipes_list)} рецептов в категории {category.title}',
-                                 reply_markup=get_main_kb(message.chat.id, only_menu=True))
+                                 reply_markup=await get_main_kb(message.chat.id, only_menu=True))
         else:
             await message.answer(f'Найдено {len(recipes_list)} рецептов',
-                                 reply_markup=get_main_kb(message.chat.id, only_menu=True))
+                                 reply_markup=await get_main_kb(message.chat.id, only_menu=True))
 
     text = f"""Рецепт {page + 1}/{len(recipes_list)}
 <b>{recipe.title}</b>
@@ -112,6 +114,52 @@ async def send_single_recipe(recipe: Recipe, message: Message, edit: bool = Fals
         await message.answer(text, reply_markup=single_recipe_panel(recipe.id, favourite))
 
 
+async def send_recipe_to_check_reports(recipes_list: list[Recipe] | list[models.Model],
+                                       message: Message,
+                                       client: Redis,
+                                       edit_msg: bool = False,
+                                       page: int = 0):
+    recipe = recipes_list[page]
+    text = f"""Рецепт {page + 1}/{len(recipes_list)}
+<b>{recipe.title}</b>
+id рецепта: {recipe.id}
+Категория: {recipe.category.title}
+Автор: {recipe.creator.name}
+Юзернейм: @{recipe.creator.username}
+id автора: {recipe.creator.tg_id}
+{recipe.url}"""
+
+    reply_markup = await admin_recipe_panel(recipe.id, page)
+
+    if edit_msg:
+        await message.edit_text(text)
+        await message.edit_reply_markup(reply_markup=reply_markup)
+    else:
+        await message.answer(text, reply_markup=reply_markup)
+
+
+async def send_report_reason(reports_list: list[Report] | list[models.Model],
+                             message: Message,
+                             edit_msg: bool = False,
+                             page: int = 0):
+    report = reports_list[page]
+    text = f"""Причина жалобы {page + 1}/{len(reports_list)}
+Пользователь: {report.user.name}
+Юзернейм: @{report.user.username}
+ID: {report.user.tg_id}
+
+<b>Причина:</b>
+<i>{report.reason}</i>"""
+
+    reply_markup = await admin_report_panel(page)
+
+    if edit_msg:
+        await message.edit_text(text)
+        await message.edit_reply_markup(reply_markup=reply_markup)
+    else:
+        await message.answer(text, reply_markup=reply_markup)
+
+
 def get_list_from_cache(client: redis.Redis, key: str, types: Any) -> list:
     if issubclass(types, int):
         lst = [int(item) for item in client.lrange(key, 0, -1)]
@@ -132,8 +180,8 @@ def cache_list_update(client: redis.Redis, key: str, lst: list) -> None:
     client.expire(key, 60 * 15)
 
 
-async def get_popular_recipes() -> list[Recipe]:
-    recipes = await Recipe.annotate(
+def get_popular_recipes() -> QuerySet[models.MODEL]:
+    recipes = Recipe.annotate(
         favourite_count=Count('recipe_favourites')
     ).order_by('-favourite_count', 'title').all()
 

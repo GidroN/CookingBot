@@ -1,15 +1,13 @@
 from aiogram import Router
-from .state_process import router as state_router
-from .user import router as user_router
-from .admin import router as admin_router
+from .admin import router as admin_handlers
+from .user import router as user_handlers
 
 
-router = Router()
+router = Router(name='handlers')
 
 router.include_routers(
-    state_router,
-    admin_router,
-    user_router,
+    admin_handlers,
+    user_handlers
 )
 
 __all__ = ('router', )

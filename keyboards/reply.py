@@ -50,13 +50,12 @@ main_menu_user_with_admin_option_kb = ReplyKeyboardMarkup(
             KeyboardButton(text=BT.RANDOM_RECIPE),
         ],
         [
-            KeyboardButton(text=BT.ADMIN_PANEL),
+            KeyboardButton(text=BT.ADMIN_INTERFACE),
         ]
     ],
     resize_keyboard=True,
     input_field_placeholder='Главное меню'
 )
-
 
 main_menu_user_kb = ReplyKeyboardMarkup(
     keyboard=[
@@ -82,9 +81,33 @@ main_menu_admin_kb = ReplyKeyboardMarkup(
             KeyboardButton(text=BT.CHECK_REPORTS),
         ],
         [
-            KeyboardButton(text=BT.USER_PANEL),
+            KeyboardButton(text=BT.ADMIN_PANEL),
+        ],
+        [
+            KeyboardButton(text=BT.USER_INTERFACE),
         ]
     ],
     resize_keyboard=True,
     input_field_placeholder='Главное меню',
+)
+
+cancel_or_skip_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.SKIP),
+        ],
+        [
+            KeyboardButton(text=BT.CANCEL),
+        ]
+    ],
+    resize_keyboard=True,
+)
+
+help_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.HELP)
+        ]
+    ],
+    resize_keyboard=True,
 )
