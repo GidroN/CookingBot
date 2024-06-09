@@ -1,14 +1,15 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from database.redis_client import rc
-from keyboards import main_menu_user_with_admin_option_kb, main_menu_admin_kb, admin_panel
-from keyboards.button_text import ButtonText as BT
 from database.models import Recipe, Report
+from database.redis_client import rc
+from keyboards import (admin_panel, main_menu_admin_kb,
+                       main_menu_user_with_admin_option_kb)
+from keyboards.button_text import ButtonText as BT
 from misc.filters import AdminFilter
-from misc.utils import send_single_recipe, convert_ids_list_into_objects, cache_list_update, \
-    send_recipe_to_check_reports
+from misc.utils import (cache_list_update, convert_ids_list_into_objects,
+                        send_recipe_to_check_reports, send_single_recipe)
 
 router = Router(name='admin_handlers')
 

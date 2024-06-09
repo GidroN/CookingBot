@@ -1,23 +1,31 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.enums import ChatAction
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, any_state
-from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.state import any_state, default_state
+from aiogram.types import CallbackQuery, Message
 
-from database.models import Category, Recipe, User, UserFavouriteRecipe, Report
+from database.models import Category, Recipe, Report, User, UserFavouriteRecipe
 from database.redis_client import rc
-from keyboards import (cancel_mk, PaginationCallback,
-                       AddRecipeToFavouritesCallback, PaginationMarkup, RecipeChangeItem,
-                       confirm_delete_recipe, DeleteRecipeAction, search_by_category_panel, SearchType, BackToType,
-                       search_type_panel, ChooseSearchTypeAction, cancel_or_skip_kb, PaginationKey, UserChangeItem, )
-from keyboards.builders import categories, user_recipe_panel, single_recipe_panel
-from keyboards.factories import ReportRecipeCallback, ChangeRecipeInfoCallback, DeleteRecipeCallback, \
-    BackCallback, ChooseSearchTypeCallback, ChooseSearchTypeByCategoryCallback, ChangeUserInfoCallback
-from misc.states import AddRecipeForm, SearchRecipeForm, EditRecipeForm, DeleteRecipeForm, GetReportReasonForm, \
-    EditUserForm
-from misc.utils import check_recipe_in_favourites, get_main_kb, send_user_recipe_info, get_list_from_cache, \
-    convert_ids_list_into_objects, \
-    cache_list_update, send_user_recipe_change, get_popular_recipes, send_recipe_to_check_reports, send_report_reason
+from keyboards import (AddRecipeToFavouritesCallback, BackToType,
+                       ChooseSearchTypeAction, DeleteRecipeAction,
+                       PaginationCallback, PaginationKey, PaginationMarkup,
+                       RecipeChangeItem, SearchType, UserChangeItem, cancel_mk,
+                       cancel_or_skip_kb, confirm_delete_recipe,
+                       search_by_category_panel, search_type_panel)
+from keyboards.builders import (categories, single_recipe_panel,
+                                user_recipe_panel)
+from keyboards.factories import (BackCallback, ChangeRecipeInfoCallback,
+                                 ChangeUserInfoCallback,
+                                 ChooseSearchTypeByCategoryCallback,
+                                 ChooseSearchTypeCallback,
+                                 DeleteRecipeCallback, ReportRecipeCallback)
+from misc.states import (AddRecipeForm, DeleteRecipeForm, EditRecipeForm,
+                         EditUserForm, GetReportReasonForm, SearchRecipeForm)
+from misc.utils import (cache_list_update, check_recipe_in_favourites,
+                        convert_ids_list_into_objects, get_list_from_cache,
+                        get_main_kb, get_popular_recipes,
+                        send_recipe_to_check_reports, send_report_reason,
+                        send_user_recipe_change, send_user_recipe_info)
 
 router = Router(name='user_callbacks')
 

@@ -2,14 +2,19 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.models import Category, Recipe, Report
-from keyboards import BackToType, ChooseSearchTypeCallback, SearchType, ChooseSearchTypeAction, PaginationKey, \
-    UserChangeItem
-from keyboards.callback_constants import CallbackConstants
-from keyboards.factories import PaginationCallback, PaginationAction, PaginationMarkup, \
-    AddRecipeToFavouritesCallback, \
-    ReportRecipeCallback, ChangeRecipeInfoCallback, RecipeChangeItem, BackCallback, ChooseSearchTypeByCategoryCallback, \
-    CheckReportsCallback, FalseAlarmRecipeCallback, WarnUserCallback, ChangeUserInfoCallback
+from keyboards import (BackToType, ChooseSearchTypeAction,
+                       ChooseSearchTypeCallback, PaginationKey, SearchType,
+                       UserChangeItem)
 from keyboards.button_text import ButtonText as BT
+from keyboards.callback_constants import CallbackConstants
+from keyboards.factories import (AddRecipeToFavouritesCallback, BackCallback,
+                                 ChangeRecipeInfoCallback,
+                                 ChangeUserInfoCallback, CheckReportsCallback,
+                                 ChooseSearchTypeByCategoryCallback,
+                                 FalseAlarmRecipeCallback, PaginationAction,
+                                 PaginationCallback, PaginationMarkup,
+                                 RecipeChangeItem, ReportRecipeCallback,
+                                 WarnUserCallback)
 
 
 async def categories(prefix: str, prev: bool = True, cancel: bool = False):

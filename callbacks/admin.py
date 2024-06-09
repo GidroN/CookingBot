@@ -1,14 +1,16 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from database.models import Report, Recipe
+from database.models import Recipe, Report
 from database.redis_client import rc
-from keyboards import CheckReportsCallback, FalseAlarmRecipeCallback, WarnUserCallback, cancel_mk
+from keyboards import (CheckReportsCallback, FalseAlarmRecipeCallback,
+                       WarnUserCallback, cancel_mk)
 from keyboards.callback_constants import CallbackConstants as Cb
 from misc.states import GetWarnReasonForm
-from misc.utils import get_list_from_cache, convert_ids_list_into_objects, send_report_reason, \
-    send_recipe_to_check_reports, cache_list_update
+from misc.utils import (cache_list_update, convert_ids_list_into_objects,
+                        get_list_from_cache, send_recipe_to_check_reports,
+                        send_report_reason)
 
 router = Router(name='admin_callbacks')
 

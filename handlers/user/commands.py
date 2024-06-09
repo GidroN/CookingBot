@@ -1,19 +1,20 @@
 import random
 
-from aiogram import Router, F, Bot
-from aiogram.filters import CommandStart, Command, CommandObject
+from aiogram import Bot, F, Router
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards import cancel_mk, profile_mk, search_type_panel, help_kb
+from database.models import Recipe, User
+from database.redis_client import rc
+from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel
 from keyboards.builders import categories
 from keyboards.button_text import ButtonText as BT
-from database.models import User, Recipe
 from misc.filters import IsNotActiveUser
 from misc.states import AddRecipeForm, SearchRecipeForm, SetTimerForm
-from misc.utils import get_main_kb, send_user_recipe_info, cache_list_update, convert_ids_list_into_objects, \
-    send_user_recipe_change, send_single_recipe
-from database.redis_client import rc
+from misc.utils import (cache_list_update, convert_ids_list_into_objects,
+                        get_main_kb, send_single_recipe,
+                        send_user_recipe_change, send_user_recipe_info)
 
 router = Router(name='user_handlers')
 
