@@ -6,7 +6,6 @@ class User(models.Model):
     username = fields.CharField(max_length=32, null=True)
     name = fields.CharField(max_length=129)  # 128 max chars + spacebar
     is_admin = fields.BooleanField(default=False)
-    # register_date = fields.DatetimeField(auto_now_add=True, null=True)
     favourite_recipes = fields.ManyToManyField('models.Recipe', related_name='favourite_by', through='userfavouriterecipe')
     is_active = fields.BooleanField(default=True)
 
@@ -42,7 +41,6 @@ class Report(models.Model):
     recipe = fields.ForeignKeyField('models.Recipe', on_delete=fields.CASCADE, related_name='recipe_report')
     user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='user_report')
     reason = fields.CharField(max_length=100, null=True)
-    # is_active = fields.BooleanField(default=True)
 
 
 class UserWarn(models.Model):

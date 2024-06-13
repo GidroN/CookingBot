@@ -4,7 +4,7 @@ services:
     build: .
     depends_on:
       - redis
-#      - potgres
+      - postgres
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABSE_URL=postgresql://postgres:password@postgres:5432/botdb
@@ -25,6 +25,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: botdb
     ports:
-      - "5432:5432"
+      - "6543:5432"
 #    volumes:
 #      - postgres_data:/var/lib/postgresql/data
