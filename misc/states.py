@@ -41,3 +41,16 @@ class EditUserForm(StatesGroup):
 
 class RegisterUserForm(StatesGroup):
     agreement = State()
+
+
+class EditCategoryForm(StatesGroup):
+    choose_category = State()
+    get_user_input = State()
+
+
+class AddCategoryForm(StatesGroup):
+    get_user_input = State()
+
+
+class DeleteCategoryForm(StatesGroup):
+    confirm = State()

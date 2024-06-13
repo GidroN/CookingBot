@@ -1,6 +1,7 @@
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from constants.factory import CategoryChangeItem
 from database.models import Category, Recipe, Report
 from keyboards import (BackToType, ChooseSearchTypeAction,
                        ChooseSearchTypeCallback, PaginationKey, SearchType,
@@ -14,7 +15,7 @@ from keyboards.factories import (AddRecipeToFavouritesCallback, BackCallback,
                                  FalseAlarmRecipeCallback, PaginationAction,
                                  PaginationCallback, PaginationMarkup,
                                  RecipeChangeItem, ReportRecipeCallback,
-                                 WarnUserCallback)
+                                 WarnUserCallback, ChangeCategoryInfoCallback)
 
 
 async def categories(prefix: str, prev: bool = True, cancel: bool = False):
@@ -63,33 +64,39 @@ def user_recipe_panel(recipe_id: int, favourite: bool = False, page: int = 0):
     return keyboard.adjust(2, 1, 1).as_markup()
 
 
-def user_recipe_change_panel(recipe_id: int, page: int = 0):
+def user_recipe_change_panel(recipe_id: int, page: int = 0, only_delete: bool = False):
     keyboard = InlineKeyboardBuilder()
-    keyboard.add(
-
-        InlineKeyboardButton(text=BT.PREV,
-                             callback_data=PaginationCallback(page=page,
-                                                              action=PaginationAction.PREV,
-                                                              markup=PaginationMarkup.OWNER,
-                                                              key=PaginationKey.DEFAULT).pack()),
-        InlineKeyboardButton(text=BT.NEXT,
-                             callback_data=PaginationCallback(page=page,
-                                                              action=PaginationAction.NEXT,
-                                                              markup=PaginationMarkup.OWNER,
-                                                              key=PaginationKey.DEFAULT).pack()),
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_NAME,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.NAME, ).pack()),
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_URL,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.LINK).pack()),
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_CATEGORY,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.CATEGORY).pack()),
-        InlineKeyboardButton(text=BT.DELETE_RECIPE,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.DELETE).pack()),
-    )
+    if only_delete:
+        keyboard.add(
+            InlineKeyboardButton(text=BT.DELETE_RECIPE,
+                                 callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
+                                                                        change_item=RecipeChangeItem.DELETE).pack()),
+        )
+    else:
+        keyboard.add(
+            InlineKeyboardButton(text=BT.PREV,
+                                 callback_data=PaginationCallback(page=page,
+                                                                  action=PaginationAction.PREV,
+                                                                  markup=PaginationMarkup.OWNER,
+                                                                  key=PaginationKey.DEFAULT).pack()),
+            InlineKeyboardButton(text=BT.NEXT,
+                                 callback_data=PaginationCallback(page=page,
+                                                                  action=PaginationAction.NEXT,
+                                                                  markup=PaginationMarkup.OWNER,
+                                                                  key=PaginationKey.DEFAULT).pack()),
+            InlineKeyboardButton(text=BT.CHANGE_RECIPE_NAME,
+                                 callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
+                                                                        change_item=RecipeChangeItem.NAME, ).pack()),
+            InlineKeyboardButton(text=BT.CHANGE_RECIPE_URL,
+                                 callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
+                                                                        change_item=RecipeChangeItem.LINK).pack()),
+            InlineKeyboardButton(text=BT.CHANGE_RECIPE_CATEGORY,
+                                 callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
+                                                                        change_item=RecipeChangeItem.CATEGORY).pack()),
+            InlineKeyboardButton(text=BT.DELETE_RECIPE,
+                                 callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
+                                                                        change_item=RecipeChangeItem.DELETE).pack()),
+        )
 
     return keyboard.adjust(2, 2, 1, 1).as_markup()
 
@@ -220,6 +227,23 @@ async def profile_panel(tg_id: int):
     keyboard.add(
         InlineKeyboardButton(text=BT.CHANGE_USER_NAME,
                              callback_data=ChangeUserInfoCallback(tg_id=tg_id, change_item=UserChangeItem.NAME).pack()),
+    )
+
+    return keyboard.adjust(1).as_markup()
+
+
+def category_change_panel(category_id: int):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(
+        InlineKeyboardButton(text=BT.CHANGE_CATEGORY_TITLE,
+                             callback_data=ChangeCategoryInfoCallback(category_id=category_id,
+                                                                      change_item=CategoryChangeItem.TITLE).pack()),
+        InlineKeyboardButton(text=BT.DELETE_CATEGORY,
+                             callback_data=ChangeCategoryInfoCallback(category_id=category_id,
+                                                                      change_item=CategoryChangeItem.DELETE).pack()),
+        InlineKeyboardButton(text=BT.PREV,
+                             callback_data=BackCallback(back_to_type=BackToType.CHOOSE_CATEGORY_EDIT,
+                                                        change_kb=False).pack())
     )
 
     return keyboard.adjust(1).as_markup()

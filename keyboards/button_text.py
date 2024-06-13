@@ -45,3 +45,8 @@ class ButtonText(StrEnum):
     DEATH = '💀'
     CHANGE_USER_NAME = '✏ Изменить имя'
     # DELETE_PROFILE = '🗑 Удалить профиль'
+    MANAGE_CATEGORIES = '🍴 Управлять категориями'
+    CHANGE_CATEGORY = '✏ Изменить категорию'
+    CHANGE_CATEGORY_TITLE = '✏ Изменить имя'
+    DELETE_CATEGORY = '🗑 Удалить категорию'
+    ADD_CATEGORY = '➕ Добавить категорию'

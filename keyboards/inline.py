@@ -1,16 +1,17 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from constants.callback import CallbackConstants
 from keyboards.button_text import ButtonText as BT
-from keyboards.factories import BackCallback, DeleteRecipeCallback
-from constants.factory import DeleteRecipeAction, BackToType
+from keyboards.factories import BackCallback, DeleteItemCallback
+from constants.factory import DeleteAction, BackToType
 
 confirm_delete_recipe = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(text=BT.CONFIRM,
-                                 callback_data=DeleteRecipeCallback(action=DeleteRecipeAction.CONFIRM).pack()),
+                                 callback_data=DeleteItemCallback(action=DeleteAction.CONFIRM).pack()),
             InlineKeyboardButton(text=BT.CANCEL,
-                                 callback_data=DeleteRecipeCallback(action=DeleteRecipeAction.CANCEL).pack())
+                                 callback_data=DeleteItemCallback(action=DeleteAction.CANCEL).pack())
         ]
     ]
 )
@@ -46,3 +47,13 @@ user_agreement_panel = InlineKeyboardMarkup(
     ]
 )
 
+admin_manage_category_panel = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text=BT.CHANGE_CATEGORY, callback_data=CallbackConstants.EDIT_CATEGORY),
+        ],
+        [
+            InlineKeyboardButton(text=BT.ADD_CATEGORY, callback_data=CallbackConstants.ADD_CATEGORY),
+        ]
+    ]
+)

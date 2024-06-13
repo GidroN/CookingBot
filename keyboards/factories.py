@@ -6,7 +6,7 @@ from constants.factory import (PaginationAction,
                                SearchType,
                                BackToType,
                                ChooseSearchTypeAction,
-                               PaginationKey, UserChangeItem, )
+                               PaginationKey, UserChangeItem, CategoryChangeItem, )
 
 
 class UserRegisterCallback(CallbackData, prefix='user_register'):
@@ -35,8 +35,7 @@ class ChangeRecipeInfoCallback(CallbackData, prefix='change_recipe_info'):
     change_item: RecipeChangeItem
 
 
-class DeleteRecipeCallback(CallbackData, prefix='delete_recipe'):
-    # recipe_id in state data
+class DeleteItemCallback(CallbackData, prefix='delete_recipe'):
     action: str
 
 
@@ -74,3 +73,8 @@ class ChangeUserInfoCallback(CallbackData, prefix='change_user_info'):
 
 class UserAgreeAgreementCallback(CallbackData, prefix='agree_agreement'):
     tg_id: int
+
+
+class ChangeCategoryInfoCallback(CallbackData, prefix='change_category'):
+    category_id: int
+    change_item: CategoryChangeItem

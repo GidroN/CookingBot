@@ -2,12 +2,14 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from database.models import Recipe, Report
+from constants.factory import BackToType, CategoryChangeItem, DeleteAction
+from database.models import Recipe, Report, Category
 from database.redis_client import rc
 from keyboards import (CheckReportsCallback, FalseAlarmRecipeCallback,
-                       WarnUserCallback, cancel_mk)
-from constants.callback import CallbackConstants as Cb
-from misc.states import GetWarnReasonForm
+                       WarnUserCallback, cancel_mk, category_change_panel, BackCallback, categories,
+                       ChangeCategoryInfoCallback, confirm_delete_recipe, DeleteItemCallback)
+from constants.callback import CallbackConstants as Cb, CallbackConstants
+from misc.states import GetWarnReasonForm, EditCategoryForm, AddCategoryForm, DeleteCategoryForm
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_list_from_cache, send_recipe_to_check_reports,
                         send_report_reason, get_main_kb)
@@ -83,3 +85,65 @@ async def warn_user(callback: CallbackQuery, callback_data: WarnUserCallback, st
     await callback.message.answer('Введите пожалуйста причину предупреждения:', reply_markup=cancel_mk)
     await state.set_state(GetWarnReasonForm.reason)
     await state.update_data(user=user, recipe=recipe, message=callback.message)
+
+
+@router.callback_query(F.data == CallbackConstants.ADD_CATEGORY)
+async def add_category(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await callback.message.answer('Введите имя для категории:', reply_markup=cancel_mk)
+    await state.set_state(AddCategoryForm.get_user_input)
+
+
+@router.callback_query(F.data == CallbackConstants.EDIT_CATEGORY)
+@router.callback_query(BackCallback.filter(F.back_to_type == BackToType.CHOOSE_CATEGORY_EDIT))
+async def select_option_edit_category(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('Вы вернулись к выбору категории')
+    await callback.message.edit_text('Выберите категорию для изменения:')
+    await callback.message.edit_reply_markup(reply_markup=await categories(CallbackConstants.CHOOSE_CATEGORY_TO_CHANGE + '_', prev=False))
+    await state.set_state(EditCategoryForm.choose_category)
+
+
+@router.callback_query(EditCategoryForm.choose_category, F.data.startswith(CallbackConstants.CHOOSE_CATEGORY_TO_CHANGE))
+async def choose_category_to_change(callback: CallbackQuery, state: FSMContext):
+    category_id = int(callback.data.split('_')[-1])
+    category = await Category.get(id=category_id)
+    await callback.answer(f'Вы перешли в категорию {category.title}')
+    await callback.message.edit_text(f'Категория: {category.title}')
+    await callback.message.edit_reply_markup(reply_markup=category_change_panel(category_id))
+    await state.update_data(category=category)
+
+
+@router.callback_query(ChangeCategoryInfoCallback.filter())
+async def select_option_to_change_category(callback: CallbackQuery, callback_data: ChangeCategoryInfoCallback, state: FSMContext):
+    await callback.answer()
+    change_item = callback_data.change_item
+    category = (await state.get_data())['category']
+    recipes = await Recipe.filter(category=category).count()
+
+    if change_item == CategoryChangeItem.TITLE:
+        await callback.message.answer('Введите пожалуйста новое название:', reply_markup=cancel_mk)
+        await state.set_state(EditCategoryForm.get_user_input)
+    else: # change_item = CategoryChangeItem.DELETE
+        if not recipes:
+            await callback.message.answer('Вы уверены, что хотите удалить эту категорию?',
+                                          reply_markup=confirm_delete_recipe)
+            await state.set_state(DeleteCategoryForm.confirm)
+        else:
+            await callback.message.answer(f'На данный момент в этой категории создано {recipes} рецептов, и к вы не сможете ее удалить.')
+            await state.clear()
+
+
+@router.callback_query(DeleteCategoryForm.confirm, DeleteItemCallback.filter())
+async def delete_category(callback: CallbackQuery, callback_data: DeleteItemCallback, state: FSMContext):
+    await callback.answer()
+    data = await state.get_data()
+    category = data['category']
+    action = callback_data.action
+
+    if action == DeleteAction.CONFIRM:
+        await category.delete()
+        await callback.message.answer('Категория успешно удалена.')
+    else: # action == DeleteAction.CANCEL
+        await callback.message.delete()
+
+    await state.clear()

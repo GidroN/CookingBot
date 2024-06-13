@@ -8,7 +8,7 @@ from constants.callback import CallbackConstants
 from database.models import Category, Recipe, Report, User, UserFavouriteRecipe
 from database.redis_client import rc
 from keyboards import (AddRecipeToFavouritesCallback, BackToType,
-                       ChooseSearchTypeAction, DeleteRecipeAction,
+                       ChooseSearchTypeAction, DeleteAction,
                        PaginationCallback, PaginationKey, PaginationMarkup,
                        RecipeChangeItem, SearchType, UserChangeItem, cancel_mk,
                        cancel_or_skip_kb, confirm_delete_recipe,
@@ -19,7 +19,7 @@ from keyboards.factories import (BackCallback, ChangeRecipeInfoCallback,
                                  ChangeUserInfoCallback,
                                  ChooseSearchTypeByCategoryCallback,
                                  ChooseSearchTypeCallback,
-                                 DeleteRecipeCallback, ReportRecipeCallback, UserAgreeAgreementCallback)
+                                 DeleteItemCallback, ReportRecipeCallback, UserAgreeAgreementCallback)
 from misc.states import (AddRecipeForm, DeleteRecipeForm, EditRecipeForm,
                          EditUserForm, GetReportReasonForm, SearchRecipeForm, RegisterUserForm)
 from misc.utils import (cache_list_update, check_recipe_in_favourites,
@@ -272,15 +272,15 @@ async def process_change_recipe_info(callback: CallbackQuery, callback_data: Cha
     await state.update_data(change_item=change_item, recipe_id=recipe_id)
 
 
-@router.callback_query(DeleteRecipeForm.confirm, DeleteRecipeCallback.filter())
-async def process_delete_recipe_form(callback: CallbackQuery, callback_data: DeleteRecipeCallback, state: FSMContext):
+@router.callback_query(DeleteRecipeForm.confirm, DeleteItemCallback.filter())
+async def process_delete_recipe_form(callback: CallbackQuery, callback_data: DeleteItemCallback, state: FSMContext):
     action = callback_data.action
     data = await state.get_data()
     recipe_id = data['recipe_id']
     message_to_edit = data['message']
     recipe = await Recipe.get(id=recipe_id)
 
-    if action == DeleteRecipeAction.CANCEL:
+    if action == DeleteAction.CANCEL:
         await callback.message.delete()
         await callback.answer('Отменено.')
     else:  # action == CONFIRM
@@ -325,6 +325,7 @@ async def process_recipe_edit_category(callback: CallbackQuery, state: FSMContex
 
 @router.callback_query(ChangeUserInfoCallback.filter())
 async def change_user_info(callback: CallbackQuery, callback_data: ChangeUserInfoCallback, state: FSMContext):
+    await callback.answer()
     change_item = callback_data.change_item
     tg_id = callback_data.tg_id
     user = await User.get(tg_id=tg_id)

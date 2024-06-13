@@ -83,8 +83,11 @@ main_menu_admin_kb = ReplyKeyboardMarkup(
         [
             KeyboardButton(text=BT.CHECK_REPORTS),
         ],
+        # [
+        #     KeyboardButton(text=BT.ADMIN_PANEL),
+        # ],
         [
-            KeyboardButton(text=BT.ADMIN_PANEL),
+            KeyboardButton(text=BT.MANAGE_CATEGORIES),
         ],
         [
             KeyboardButton(text=BT.USER_INTERFACE),
@@ -115,7 +118,7 @@ help_kb = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
-user_agree_agreement_panel = ReplyKeyboardMarkup(
+user_agree_agreement_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text=BT.AGREE_AGREEMENT)

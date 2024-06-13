@@ -2,34 +2,37 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from constants.callback import CallbackConstants
 from database.models import Recipe, Report
 from database.redis_client import rc
 from keyboards import (admin_panel, main_menu_admin_kb,
-                       main_menu_user_with_admin_option_kb)
+                       main_menu_user_with_admin_option_kb, categories, admin_manage_category_panel)
 from keyboards.button_text import ButtonText as BT
 from misc.filters import AdminFilter
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
-                        send_recipe_to_check_reports, send_single_recipe)
+                        send_recipe_to_check_reports, send_single_recipe, get_main_kb)
 
 router = Router(name='admin_handlers')
 
 
-@router.message(AdminFilter(), Command('get_recipe_by_id'))
-async def get_recipe_by_id(message: Message):
-    recipe_id = message.text.split()[-1]
-    recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related('creator', 'category')
-    if recipe:
-        await send_single_recipe(recipe, message, True)
-    else:
-        await message.answer('По этому id ничего не найдено.')
+# @router.message(AdminFilter(), Command('get_recipe_by_id'))
+# async def get_recipe_by_id(message: Message):
+#     recipe_id = message.text.split()[-1]
+#     recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related('creator', 'category')
+#     if recipe:
+#         await send_single_recipe(recipe, message, True)
+#     else:
+#         await message.answer('По этому id ничего не найдено.')
 
 
 @router.message(AdminFilter(), F.text == BT.USER_INTERFACE)
+@router.message(AdminFilter(), Command('user'))
 async def change_to_user_panel(message: Message):
     await message.answer('Вы перешли в интерфейс пользователя.', reply_markup=main_menu_user_with_admin_option_kb)
 
 
 @router.message(AdminFilter(), F.text == BT.ADMIN_INTERFACE)
+@router.message(AdminFilter(), Command('admin'))
 async def change_to_user_panel(message: Message):
     await message.answer('Вы перешли в интерфейс администратора.', reply_markup=main_menu_admin_kb)
 
@@ -51,3 +54,10 @@ async def check_reports(message: Message):
     cache_list_update(client, key, recipe_ids)
     recipes = await convert_ids_list_into_objects(recipe_ids, Recipe, ['category', 'creator'])
     await send_recipe_to_check_reports(recipes, message, client)
+
+
+@router.message(AdminFilter(), F.text == BT.MANAGE_CATEGORIES)
+async def change_category(message: Message):
+    await message.answer('Выбери опцию:', reply_markup=admin_manage_category_panel)
+
+

@@ -25,7 +25,7 @@ class RecipeChangeItem(StrEnum):
     DELETE = 'delete'
 
 
-class DeleteRecipeAction(StrEnum):
+class DeleteAction(StrEnum):
     CONFIRM = 'confirm'
     CANCEL = 'cancel'
 
@@ -39,6 +39,7 @@ class SearchType(StrEnum):
 class BackToType(StrEnum):
     CHOOSE_CATEGORY = 'category'
     CHOOSE_SEARCH_TYPE = 'search_type'
+    CHOOSE_CATEGORY_EDIT = 'category_edit'
 
 
 class ChooseSearchTypeAction(StrEnum):
@@ -49,3 +50,13 @@ class ChooseSearchTypeAction(StrEnum):
 
 class UserChangeItem(StrEnum):
     NAME = 'name'
+
+
+class CategoryChangeItem(StrEnum):
+    TITLE = 'title'
+    DELETE = 'delete'
+
+
+# class DeleteCategoryAction(StrEnum):
+#     CONFIRM = 'confirm'
+#     CANCEL = 'cancel'

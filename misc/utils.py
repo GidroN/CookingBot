@@ -19,7 +19,7 @@ from database.models import Recipe, Category, User, Report
 async def is_admin(tg_id: int) -> bool:
     if await User.filter(tg_id=tg_id).exists():
         user = await User.get(tg_id=tg_id)
-        return user.is_admin    
+        return user.is_admin
 
     return False
 
@@ -62,7 +62,7 @@ async def send_user_recipe_info(recipes_list: list[Recipe] | list[models.Model],
 
     recipe = recipes_list[page]
     user = await User.get(tg_id=message.chat.id).prefetch_related('favourite_recipes')
-    favourite = recipe in await user.favourite_recipes.all()
+    favourite = recipe in await user.favourite_recipes.filter(is_active=True)
 
     if print_find:
         if category:
@@ -92,12 +92,18 @@ async def send_user_recipe_change(recipes_list: list[Recipe] | list[models.Model
                                   edit_msg: bool = False,
                                   page: int = 0):
     recipe = recipes_list[page]
-    text = f"""Рецепт {page + 1}/{len(recipes_list)}
+    if recipe.is_active:
+        msg_title = f'Рецепт {page + 1}/{len(recipes_list)}'
+        reply_markup = user_recipe_change_panel(recipe.id, page)
+    else:
+        msg_title = f'<b>⚠ НЕ АКТИВЕН</b>\n\nРецепт {page + 1}/{len(recipes_list)}'
+        reply_markup = user_recipe_change_panel(recipe.id, page, True)
+
+    text = f"""{msg_title}
 <b>{recipe.title}</b>
 Категория: {recipe.category.title}
 {recipe.url}"""
 
-    reply_markup = user_recipe_change_panel(recipe.id, page)
     if not edit_msg:
         await message.answer(text, reply_markup=reply_markup)
     else:

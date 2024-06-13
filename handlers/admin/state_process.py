@@ -2,10 +2,10 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from database.models import Recipe, User, UserWarn, Report
+from database.models import Recipe, User, UserWarn, Report, Category
 from database.redis_client import rc
 from keyboards.button_text import ButtonText as BT
-from misc.states import GetWarnReasonForm
+from misc.states import GetWarnReasonForm, AddCategoryForm, DeleteCategoryForm, EditCategoryForm
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_list_from_cache, get_main_kb,
                         send_recipe_to_check_reports)
@@ -27,12 +27,12 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
     message_to_delete = data['message']
     admin = await User.get(tg_id=message.from_user.id)
 
-    # recipe.is_active = False
-    # await recipe.save()
+    recipe.is_active = False
+    await recipe.save()
 
     # delete reports
-    qs = await Report.filter(recipe=recipe)
-    for obj in qs:
+    qs = Report.filter(recipe=recipe)
+    async for obj in qs:
         await obj.delete()
 
     # warn user
@@ -93,6 +93,39 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
     await state.clear()
 
 
+@router.message(AddCategoryForm.get_user_input, F.text)
+async def process_addcategory_getuserinput(message: Message, state: FSMContext):
+    if message.text == BT.CANCEL:
+        await message.answer('Отменено.', reply_markup=await get_main_kb(message.from_user.id, True))
+        await state.clear()
+        return
+
+    title = message.text
+    await Category.create(title=title)
+    await message.answer('Новая категория успешно добавлена!',
+                         reply_markup=await get_main_kb(message.from_user.id, True))
+    await state.clear()
+
+
+@router.message(EditCategoryForm.get_user_input, F.text)
+async def process_editcategoryform_getuserinput(message: Message, state: FSMContext):
+    if message.text == BT.CANCEL:
+        await message.answer('Отменено.', reply_markup=await get_main_kb(message.from_user.id, True))
+        await state.clear()
+        return
+
+    data = await state.get_data()
+    category = data['category']
+
+    category.title = message.text
+    await category.save()
+
+    await message.answer('Имя категории успешно изменено!', reply_markup=await get_main_kb(message.from_user.id, True))
+    await state.clear()
+
+
 @router.message(GetWarnReasonForm.reason, ~F.text)
+@router.message(AddCategoryForm.get_user_input, ~F.text)
 async def invalid_getwarnreasonform(message: Message):
     await message.answer('Введите текст!')
+

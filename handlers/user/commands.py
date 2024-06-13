@@ -8,7 +8,7 @@ from aiogram.types import Message
 from database.models import Recipe, User
 from database.redis_client import rc
 from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel, user_agreement_panel, \
-    user_agree_agreement_panel
+    user_agree_agreement_kb
 from keyboards.builders import categories, profile_panel
 from keyboards.button_text import ButtonText as BT
 from misc.filters import IsNotActiveUser
@@ -48,7 +48,7 @@ async def start(message: Message, state: FSMContext):
                              f'ознакомиться с условиями использования бота.',
                              reply_markup=user_agreement_panel)
         await message.answer('НАЖИМАЯ НА КНОПКУ НИЖЕ, ВЫ СОГЛАШАЕТЕСЬ С УСЛОВИЯМИ ИСПОЛЬЗОВАНИЯ БОТА.',
-                             reply_markup=user_agree_agreement_panel)
+                             reply_markup=user_agree_agreement_kb)
         await state.set_state(RegisterUserForm.agreement)
     else:
         await message.answer(f'С возвращением, @{user.name}!', reply_markup=await get_main_kb(user.tg_id))
@@ -91,7 +91,7 @@ async def profile(message: Message):
     favourite_recipes = await user.favourite_recipes.all().count()
     published_recipes = await Recipe.filter(creator=user).count()
     await message.answer('Вы перешли в свой профиль.', reply_markup=profile_mk)
-    await message.answer(f'🧑 Ваш профиль:\n'
+    await message.answer(f'🧑 Ваш профиль\n'
                          f'👀 Имя: <b>{user.name}</b>\n'
                          f'📚 Опубликованные рецепты: <b>{published_recipes}</b>\n'
                          f'♥ Любимые рецепты: <b>{favourite_recipes}</b>',
