@@ -1,9 +1,13 @@
+import os
 from tortoise import Tortoise, run_async
 from misc.config import PG_PASSWORD, PG_DATABASE, PG_HOST, PG_PORT, PG_USER
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_URL = f"sqlite://{BASE_DIR}/db.sqlite3"
+
 TORTOISE_ORM_CONFIG = {
     "connections": {
-        "default": {
+        "postgres": {
             "engine": "tortoise.backends.asyncpg",
             "credentials": {
                 "database": PG_DATABASE,
@@ -12,20 +16,22 @@ TORTOISE_ORM_CONFIG = {
                 "port": PG_PORT,
                 "user": PG_USER,
             }
-        }
+        },
+        'sqlite': DB_URL,
     },
     "apps": {
         "models": {
             "models": ["database.models", "aerich.models"],
-            "default_connection": "default",
+            "default_connection": "postgres",
         },
     },
 }
 
 
-async def init():
+async def init(generate_schemas: bool = True):
     await Tortoise.init(TORTOISE_ORM_CONFIG)
-    # await Tortoise.generate_schemas()
+    if generate_schemas:
+        await Tortoise.generate_schemas()
 
 
 if __name__ == '__main__':

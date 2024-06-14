@@ -20,6 +20,7 @@ redis = "^5.0.4"
 aerich = "^0.7.2"
 ipython = "^8.25.0"
 asyncpg = "^0.29.0"
+requests = "^2.32.3"
 
 
 [build-system]

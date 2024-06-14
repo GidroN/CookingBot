@@ -2,15 +2,14 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from constants.callback import CallbackConstants
 from database.models import Recipe, Report
 from database.redis_client import rc
 from keyboards import (admin_panel, main_menu_admin_kb,
-                       main_menu_user_with_admin_option_kb, categories, admin_manage_category_panel)
-from keyboards.button_text import ButtonText as BT
+                       main_menu_user_with_admin_option_kb, admin_manage_category_panel)
+from constants.button_text import ButtonText as BT
 from misc.filters import AdminFilter
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
-                        send_recipe_to_check_reports, send_single_recipe, get_main_kb)
+                        send_recipe_to_check_reports)
 
 router = Router(name='admin_handlers')
 

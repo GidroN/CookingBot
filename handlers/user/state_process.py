@@ -7,7 +7,7 @@ from aiogram.types import Message
 
 from database.models import Recipe, Report, User
 from database.redis_client import rc
-from keyboards.button_text import ButtonText as BT
+from constants.button_text import ButtonText as BT
 from constants.factory import RecipeChangeItem, UserChangeItem
 from keyboards.inline import repeat_search_panel
 from keyboards.reply import cancel_mk, profile_mk

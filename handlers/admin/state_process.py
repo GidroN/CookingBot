@@ -4,8 +4,8 @@ from aiogram.types import Message
 
 from database.models import Recipe, User, UserWarn, Report, Category
 from database.redis_client import rc
-from keyboards.button_text import ButtonText as BT
-from misc.states import GetWarnReasonForm, AddCategoryForm, DeleteCategoryForm, EditCategoryForm
+from constants.button_text import ButtonText as BT
+from misc.states import GetWarnReasonForm, AddCategoryForm, EditCategoryForm
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
                         get_list_from_cache, get_main_kb,
                         send_recipe_to_check_reports)

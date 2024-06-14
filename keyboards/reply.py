@@ -1,8 +1,7 @@
 from aiogram.types import (KeyboardButton, ReplyKeyboardMarkup,
-                           ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton)
+                           ReplyKeyboardRemove)
 
-from constants.callback import CallbackConstants
-from .button_text import ButtonText as BT
+from constants.button_text import ButtonText as BT
 
 rmk = ReplyKeyboardRemove()
 

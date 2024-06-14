@@ -1,6 +1,6 @@
 import random
 
-from aiogram import Bot, F, Router
+from aiogram import F, Router
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -10,7 +10,7 @@ from database.redis_client import rc
 from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel, user_agreement_panel, \
     user_agree_agreement_kb
 from keyboards.builders import categories, profile_panel
-from keyboards.button_text import ButtonText as BT
+from constants.button_text import ButtonText as BT
 from misc.filters import IsNotActiveUser
 from misc.states import (AddRecipeForm, RegisterUserForm, SearchRecipeForm,
                          SetTimerForm)

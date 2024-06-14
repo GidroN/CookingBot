@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from constants.factory import CategoryChangeItem
@@ -6,7 +6,7 @@ from database.models import Category, Recipe, Report
 from keyboards import (BackToType, ChooseSearchTypeAction,
                        ChooseSearchTypeCallback, PaginationKey, SearchType,
                        UserChangeItem)
-from keyboards.button_text import ButtonText as BT
+from constants.button_text import ButtonText as BT
 from constants.callback import CallbackConstants
 from keyboards.factories import (AddRecipeToFavouritesCallback, BackCallback,
                                  ChangeRecipeInfoCallback,

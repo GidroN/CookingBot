@@ -19,7 +19,7 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # init db and redis
-    await init()
+    await init(generate_schemas=False)
     rc.connect(host=REDIS_HOST, port=REDIS_PORT)
 
     # set up bot
@@ -43,8 +43,8 @@ async def main():
 if __name__ == '__main__':
     try:
         asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
+    except KeyboardInterrupt:
         logging.info('Bot stopped successfully.')
-    except (TelegramNetworkError, ConnectionError):
+    except (TelegramNetworkError, ConnectionError, SystemExit):
         logging.warning('Bot stopped during and error.')
         exit(1)

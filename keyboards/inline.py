@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from constants.callback import CallbackConstants
-from keyboards.button_text import ButtonText as BT
+from constants.button_text import ButtonText as BT
 from keyboards.factories import BackCallback, DeleteItemCallback
 from constants.factory import DeleteAction, BackToType
 
