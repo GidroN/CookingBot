@@ -7,7 +7,7 @@
 
 ###  Этап 2.  Настройка бота
 1. Переименовать файл **.env.example**  в **.env**
-2. Заменить в файле **.env** переменную `BOT_TOKEN` на [токен](https://botifi.me/ru/help/telegram-existed-bot/) своего бота.
+2. Заменить в файле **.env** переменную `BOT_TOKEN` на [токен](https://botifi.me/ru/help/telegram-create-bot/) своего бота.
 
 ### Этап 3. Запуск бота
 1. Запустить Docker Desktop
