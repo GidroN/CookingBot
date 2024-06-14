@@ -19,7 +19,7 @@ from keyboards.factories import (AddRecipeToFavouritesCallback, BackCallback,
 
 
 async def categories(prefix: str, prev: bool = True, cancel: bool = False):
-    all_categories = await Category.all()
+    all_categories = await Category.all().order_by('title')
     keyboard = InlineKeyboardBuilder()
     for item in all_categories:
         category_items = await Recipe.filter(category=item, is_active=True).count()

@@ -122,7 +122,7 @@ async def search_recipe_form_by_category(message: Message, state: FSMContext):
     key = f'{message.chat.id}'
     cache_list_update(client, key, ids)
     result = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
-    await send_user_recipe_info(result, message, category, print_find=False)
+    await send_user_recipe_info(result, message, category, print_find=True)
     await state.clear()
 
 

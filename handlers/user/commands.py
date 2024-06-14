@@ -42,7 +42,8 @@ async def start(message: Message, state: FSMContext):
     if user.last_name:
         full_name += " " + user.last_name
 
-    if not await User.filter(tg_id=tg_id).exists():
+    user = await User.get_or_none(tg_id=tg_id)
+    if not user:
         await message.answer(f'<b>{full_name}, добро пожаловать в нашего бота!</b>\n'
                              f'Перед тем как начать им пользоваться вам необходимо '
                              f'ознакомиться с условиями использования бота.',
@@ -51,7 +52,7 @@ async def start(message: Message, state: FSMContext):
                              reply_markup=user_agree_agreement_kb)
         await state.set_state(RegisterUserForm.agreement)
     else:
-        await message.answer(f'С возвращением, @{user.name}!', reply_markup=await get_main_kb(user.tg_id))
+        await message.answer(f'С возвращением, @{user.username}!', reply_markup=await get_main_kb(user.tg_id))
 
 
 @router.message(F.text == BT.MAIN_MENU)
