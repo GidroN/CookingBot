@@ -15,5 +15,4 @@
 
 
 ### Дополнительно
-- Репозиторий на [GitHub](https://github.com/GidroN/CookingBot)
 - По всем вопросам - [@gidronn](https://t.me/gidronn)
