@@ -1,9 +1,9 @@
-import os
 from tortoise import Tortoise, run_async
-from misc.config import PG_PASSWORD, PG_DATABASE, PG_HOST, PG_PORT, PG_USER
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_URL = f"sqlite://{BASE_DIR}/db.sqlite3"
+from misc.config import (PG_PASSWORD,
+                         PG_DATABASE,
+                         PG_HOST,
+                         PG_PORT,
+                         PG_USER)
 
 TORTOISE_ORM_CONFIG = {
     "connections": {
@@ -17,7 +17,6 @@ TORTOISE_ORM_CONFIG = {
                 "user": PG_USER,
             }
         },
-        'sqlite': DB_URL,
     },
     "apps": {
         "models": {
