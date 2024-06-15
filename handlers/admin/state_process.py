@@ -20,7 +20,6 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
         await state.clear()
         return
 
-
     client = rc.get_client()
     data = await state.get_data()
     user = data['user']

@@ -41,7 +41,6 @@ async def process_close_report_windows(callback: CallbackQuery):
 
 @router.callback_query(FalseAlarmRecipeCallback.filter())
 async def process_false_alarm(callback: CallbackQuery, callback_data: FalseAlarmRecipeCallback):
-    await callback.answer()
     client = rc.get_client()
     recipe_id = callback_data.recipe_id
     reports_key = f'{callback.from_user.id}!{recipe_id}!reports'
