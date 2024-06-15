@@ -3,7 +3,7 @@ from enum import StrEnum
 
 class ButtonText(StrEnum):
     REGISTER = '👤 Пройти регистрацию'
-    READ_AGREEMENT = '📕 Прочесть лицензионное соглашение'
+    READ_AGREEMENT = '📕 Прочесть условия использования'
     AGREE_AGREEMENT = '✅ Я согласен с условиями'
     MAIN_MENU = '🏠 Главное меню'
     SEARCH_RECIPES = '🔎 Искать рецепт'

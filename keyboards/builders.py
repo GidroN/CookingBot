@@ -116,26 +116,6 @@ def single_recipe_panel(recipe_id: int, favourite: bool):
     return keyboard.adjust(1).as_markup()
 
 
-def single_recipe_change_panel(recipe_id: int):
-    keyboard = InlineKeyboardBuilder()
-    keyboard.add(
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_NAME,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.NAME, ).pack()),
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_URL,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.LINK).pack()),
-        InlineKeyboardButton(text=BT.CHANGE_RECIPE_CATEGORY,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.CATEGORY).pack()),
-        InlineKeyboardButton(text=BT.DELETE_RECIPE,
-                             callback_data=ChangeRecipeInfoCallback(recipe_id=recipe_id,
-                                                                    change_item=RecipeChangeItem.DELETE).pack()),
-    )
-
-    return keyboard.adjust(2, 1).as_markup()
-
-
 async def search_type_panel():
     keyboard = InlineKeyboardBuilder()
     all_categories = await Category.all().count()

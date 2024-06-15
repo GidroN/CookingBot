@@ -14,7 +14,7 @@ from keyboards.reply import cancel_mk, profile_mk
 from misc.states import (AddRecipeForm, EditRecipeForm, EditUserForm,
                          GetReportReasonForm, SearchRecipeForm, SetTimerForm, RegisterUserForm)
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
-                        get_main_kb, send_user_recipe_info, set_timer)
+                        get_main_kb, send_user_recipe_info, set_timer, notify_admins)
 
 router = Router(name='states_process')
 
@@ -33,7 +33,7 @@ async def user_agree_agreement(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router.message(RegisterUserForm.agreement, F.text != BT.AGREE_AGREEMENT)
+@router.message(RegisterUserForm.agreement, F.text != BT.AGREE_AGREEMENT and F.text != '/start')
 async def invalid_user_agree_agreement(message: Message, state: FSMContext):
     await message.answer('Вы не согласились, с условиями использования!')
 
@@ -184,10 +184,11 @@ async def process_reason_input(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    # if message.text == BT.SKIP:
-    #     reason = None
-
     await Report.create(user=user, recipe=recipe, reason=reason)
+
+    if await Report.filter(recipe=recipe).count() >= 3:
+        await notify_admins(message.bot, f'<b>Новые жалобы!</b>\n'
+                                         f'На рецепт {recipe.url}')
     await message.answer('Ваша жалоба записана.', reply_markup=await get_main_kb(message.from_user.id, True))
     await state.clear()
 

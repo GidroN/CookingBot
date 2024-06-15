@@ -3,13 +3,14 @@ import redis
 import asyncio
 from typing import Any
 
+from aiogram import Bot
 from aiogram.types import Message
 from redis import Redis
 from tortoise import models
 from tortoise.functions import Count
 from tortoise.queryset import QuerySet
 
-from keyboards.builders import single_recipe_change_panel, user_recipe_panel, user_recipe_change_panel, \
+from keyboards.builders import user_recipe_panel, user_recipe_change_panel, \
     single_recipe_panel, admin_recipe_panel, admin_report_panel
 from keyboards.reply import main_menu_user_kb, only_main_menu, main_menu_admin_kb, main_menu_user_with_admin_option_kb
 from keyboards.inline import repeat_search_panel
@@ -22,6 +23,14 @@ async def is_admin(tg_id: int) -> bool:
         return user.is_admin
 
     return False
+
+
+async def notify_admins(bot: Bot, msg: str, reply_markup=None):
+    admins = await User.filter(is_admin=True)
+    for admin in admins:
+        await bot.send_message(chat_id=admin.tg_id,
+                               text=msg,
+                               reply_markup=reply_markup)
 
 
 async def get_main_kb(tg_id: int, only_menu: bool = False, show_admin_panel=False):
@@ -111,16 +120,13 @@ async def send_user_recipe_change(recipes_list: list[Recipe] | list[models.Model
         await message.edit_reply_markup(reply_markup=reply_markup)
 
 
-async def send_single_recipe(recipe: Recipe, message: Message, edit: bool = False):
+async def send_single_recipe(recipe: Recipe, message: Message):
     favourite = await check_recipe_in_favourites(recipe.id, message.chat.id)
     text = f"""<b>{recipe.title}</b>
 Категория: {recipe.category.title}
 Автор: {recipe.creator.name}
 {recipe.url}"""
-    if edit:
-        await message.answer(text, reply_markup=single_recipe_change_panel(recipe.id))
-    else:
-        await message.answer(text, reply_markup=single_recipe_panel(recipe.id, favourite))
+    await message.answer(text, reply_markup=single_recipe_panel(recipe.id, favourite))
 
 
 async def send_recipe_to_check_reports(recipes_list: list[Recipe] | list[models.Model],
@@ -134,7 +140,6 @@ async def send_recipe_to_check_reports(recipes_list: list[Recipe] | list[models.
 id рецепта: {recipe.id}
 Категория: {recipe.category.title}
 Автор: {recipe.creator.name}
-Юзернейм: @{recipe.creator.username}
 id автора: {recipe.creator.tg_id}
 {recipe.url}"""
 
@@ -154,8 +159,6 @@ async def send_report_reason(reports_list: list[Report] | list[models.Model],
     report = reports_list[page]
     text = f"""Причина жалобы {page + 1}/{len(reports_list)}
 Пользователь: {report.user.name}
-Юзернейм: @{report.user.username}
-ID: {report.user.tg_id}
 
 <b>Причина:</b>
 <i>{report.reason}</i>"""
@@ -193,5 +196,13 @@ def get_popular_recipes() -> QuerySet[models.MODEL]:
     recipes = Recipe.annotate(
         favourite_count=Count('recipe_favourites')
     ).order_by('-favourite_count', 'title').filter(is_active=True)
+
+    return recipes
+
+
+def get_three_report_recipes() -> QuerySet[models.MODEL]:
+    recipes = Recipe.annotate(
+        report_count=Count('recipe_report')
+    ).filter(report_count__gte=3)
 
     return recipes

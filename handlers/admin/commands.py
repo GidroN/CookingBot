@@ -1,6 +1,7 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
+from tortoise.functions import Count
 
 from database.models import Recipe, Report
 from database.redis_client import rc
@@ -9,19 +10,9 @@ from keyboards import (admin_panel, main_menu_admin_kb,
 from constants.button_text import ButtonText as BT
 from misc.filters import AdminFilter
 from misc.utils import (cache_list_update, convert_ids_list_into_objects,
-                        send_recipe_to_check_reports)
+                        send_recipe_to_check_reports, get_three_report_recipes)
 
 router = Router(name='admin_handlers')
-
-
-# @router.message(AdminFilter(), Command('get_recipe_by_id'))
-# async def get_recipe_by_id(message: Message):
-#     recipe_id = message.text.split()[-1]
-#     recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related('creator', 'category')
-#     if recipe:
-#         await send_single_recipe(recipe, message, True)
-#     else:
-#         await message.answer('По этому id ничего не найдено.')
 
 
 @router.message(AdminFilter(), F.text == BT.USER_INTERFACE)
@@ -45,7 +36,9 @@ async def show_admin_panel(message: Message):
 async def check_reports(message: Message):
     client = rc.get_client()
     key = f'{message.from_user.id}'
-    recipe_ids = list(set(await Report.all().values_list('recipe__id', flat=True)))
+
+    recipes = await get_three_report_recipes().values_list('id', flat=True)
+    recipe_ids = list(set(recipes))
     if not recipe_ids:
         await message.answer('На данный момент у вас нет активных жалоб')
         return

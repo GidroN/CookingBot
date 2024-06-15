@@ -163,7 +163,8 @@ async def process_search_result(callback: CallbackQuery, callback_data: Paginati
         model = Recipe
         prefetch_related = ['creator', 'category']
     else: # callback_data.key == Pagination.ADMIN_REPORT_CHECK
-        key = f'{callback.from_user.id}!reports'
+        current_recipe_id = int(client.get(f'{callback.from_user.id}:current_recipe_id'))
+        key = f'{callback.from_user.id}!{current_recipe_id}!reports'
         model = Report
         prefetch_related = ['recipe', 'user']
 

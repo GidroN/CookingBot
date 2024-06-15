@@ -20,6 +20,7 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
         await state.clear()
         return
 
+
     client = rc.get_client()
     data = await state.get_data()
     user = data['user']
@@ -31,8 +32,8 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
     await recipe.save()
 
     # delete reports
-    qs = Report.filter(recipe=recipe)
-    async for obj in qs:
+    qs = await Report.filter(recipe=recipe)
+    for obj in qs:
         await obj.delete()
 
     # warn user
@@ -52,17 +53,26 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
                                         f'<i>{message.text}</i>')
 
     if warnings == 3:
+
+        # deactivate user recipes
+        recipes = await Recipe.filter(creator=user, is_active=True)
+        for recipe in recipes:
+            recipe.is_active = False
+            await recipe.save()
+
         user.is_active = False
         user.is_admin = False
         await message.bot.send_message(chat_id=user.tg_id,
                                        text=f'<b>⚠ ВАЖНО! ⚠</b>\n\n'
                                             f'<b>Уважаемый пользователь! {user.name}</b>\n'
                                             f'Вам было вынесено <b>3</b> предупреждения.'
-                                            f'В связи с чем ваш акканут был заблокирован на нашей платформе на неограниченный срок.\n'
+                                            f'В связи с чем ваш акканут был заблокирован на нашей платформе на неограниченный срок.'
+                                            f'А ваши рецепты были заморожены.\n'
                                             f'Надеемся на ваше понимание.\n'
                                             f'С уважением\n'
                                             f'Администрация бота.')
         await user.save()
+
     else:
         await message.bot.send_message(chat_id=user.tg_id,
                                        text=f'<b>⚠ ВАЖНО! ⚠</b>\n\n'

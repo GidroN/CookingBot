@@ -40,7 +40,7 @@ class UserFavouriteRecipe(models.Model):
 class Report(models.Model):
     recipe = fields.ForeignKeyField('models.Recipe', on_delete=fields.CASCADE, related_name='recipe_report')
     user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE, related_name='user_report')
-    reason = fields.CharField(max_length=100, null=True)
+    reason = fields.TextField()
 
 
 class UserWarn(models.Model):

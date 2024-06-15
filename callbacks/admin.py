@@ -22,6 +22,7 @@ async def process_check_reports_callback(callback: CallbackQuery, callback_data:
     recipe_id = callback_data.recipe_id
 
     client = rc.get_client()
+    client.set(f'{callback.from_user.id}:current_recipe_id', recipe_id)
     key = f'{callback.from_user.id}!{recipe_id}!reports'
     report_ids = await Report.filter(recipe__id=recipe_id).values_list('id', flat=True)
 
@@ -40,6 +41,7 @@ async def process_close_report_windows(callback: CallbackQuery):
 
 @router.callback_query(FalseAlarmRecipeCallback.filter())
 async def process_false_alarm(callback: CallbackQuery, callback_data: FalseAlarmRecipeCallback):
+    await callback.answer()
     client = rc.get_client()
     recipe_id = callback_data.recipe_id
     reports_key = f'{callback.from_user.id}!{recipe_id}!reports'
@@ -57,7 +59,7 @@ async def process_false_alarm(callback: CallbackQuery, callback_data: FalseAlarm
     ids = get_list_from_cache(client, key, int)
     ids.remove(recipe_id)
 
-    await callback.answer('Вердикт вынесен.', await get_main_kb(callback.from_user.id, show_admin_panel=True))
+    await callback.message.answer('Вердикт вынесен.')
 
     if ids:
         cache_list_update(client, key, ids)
@@ -65,7 +67,8 @@ async def process_false_alarm(callback: CallbackQuery, callback_data: FalseAlarm
         client.delete(reports_key)
         await send_recipe_to_check_reports(recipes, callback.message, client, edit_msg=True)
     else:
-        await callback.message.answer('Вы просмотрели все жалобы.')
+        await callback.message.delete()
+        await callback.answer('Вы просмотрели все жалобы.', show_alert=True)
 
 
 @router.callback_query(WarnUserCallback.filter())
@@ -79,6 +82,20 @@ async def warn_user(callback: CallbackQuery, callback_data: WarnUserCallback, st
 
     if not client.exists(reports_key):
         await callback.answer('Прежде чем вынести вердикт, пожалуйста ознакомьтесь с жалобами.', show_alert=True)
+        return
+
+    if not recipe.is_active:
+        key = str(callback.from_user.id)
+        await callback.answer('Данный рецепт уже был обработан.', show_alert=True)
+        ids = get_list_from_cache(client, key, int)
+        if ids:
+            ids.remove(recipe_id)
+            cache_list_update(client, key, ids)
+            recipes = await convert_ids_list_into_objects(ids, Recipe, ['creator', 'category'])
+            client.delete(reports_key)
+            await send_recipe_to_check_reports(recipes, callback.message, client, edit_msg=True)
+        else:
+            await callback.message.answer('На текущий момент нет рецептов с жалобами.')
         return
 
     await callback.answer()
@@ -115,7 +132,6 @@ async def choose_category_to_change(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(ChangeCategoryInfoCallback.filter())
 async def select_option_to_change_category(callback: CallbackQuery, callback_data: ChangeCategoryInfoCallback, state: FSMContext):
-    await callback.answer()
     change_item = callback_data.change_item
     category = (await state.get_data())['category']
     recipes = await Recipe.filter(category=category).count()
@@ -129,7 +145,7 @@ async def select_option_to_change_category(callback: CallbackQuery, callback_dat
                                           reply_markup=confirm_delete_recipe)
             await state.set_state(DeleteCategoryForm.confirm)
         else:
-            await callback.message.answer(f'На данный момент в этой категории создано {recipes} рецептов, и к вы не сможете ее удалить.')
+            await callback.answer(f'На данный момент в этой категории создано {recipes} рецептов, и вы не сможете ее удалить.', True)
             await state.clear()
 
 
