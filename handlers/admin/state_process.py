@@ -105,14 +105,14 @@ async def process_getwarnreasonform_reason(message: Message, state: FSMContext):
 @router.message(AddCategoryForm.get_user_input, F.text)
 async def process_addcategory_getuserinput(message: Message, state: FSMContext):
     if message.text == BT.CANCEL:
-        await message.answer('Отменено.', reply_markup=await get_main_kb(message.from_user.id, True))
+        await message.answer('Отменено.', reply_markup=await get_main_kb(message.from_user.id))
         await state.clear()
         return
 
     title = message.text
     await Category.create(title=title)
     await message.answer('Новая категория успешно добавлена!',
-                         reply_markup=await get_main_kb(message.from_user.id, True))
+                         reply_markup=await get_main_kb(message.from_user.id, show_admin_panel=True))
     await state.clear()
 
 

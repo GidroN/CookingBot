@@ -436,49 +436,49 @@ COPY public.userwarn (id, date, reason, admin_id, recipe_id, user_id) FROM stdin
 -- Name: aerich_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.aerich_id_seq', 1, false);
+SELECT pg_catalog.setval('public.aerich_id_seq', (SELECT MAX(id) FROM public.aerich) + 1, false);
 
 
 --
 -- Name: category_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.category_id_seq', 1, false);
+SELECT pg_catalog.setval('public.category_id_seq', (SELECT MAX(id) FROM public.category) + 1, false);
 
 
 --
 -- Name: recipe_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.recipe_id_seq', 1, false);
+SELECT pg_catalog.setval('public.recipe_id_seq', (SELECT MAX(id) FROM public.recipe) + 1, false);
 
 
 --
 -- Name: report_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.report_id_seq', 1, false);
+SELECT pg_catalog.setval('public.report_id_seq', (SELECT MAX(id) FROM public.report) + 1, false);
 
 
 --
 -- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.user_id_seq', 1, true);
+SELECT pg_catalog.setval('public.user_id_seq', (SELECT MAX(id) FROM public.user) + 1, true);
 
 
 --
 -- Name: userfavouriterecipe_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.userfavouriterecipe_id_seq', 1, false);
+SELECT pg_catalog.setval('public.userfavouriterecipe_id_seq', (SELECT MAX(id) FROM public.userfavouriterecipe) + 1, false);
 
 
 --
 -- Name: userwarn_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.userwarn_id_seq', 1, false);
+SELECT pg_catalog.setval('public.userwarn_id_seq', (SELECT MAX(id) FROM public.userwarn) + 1, false);
 
 
 --
