@@ -372,18 +372,18 @@ COPY public.recipe (id, title, url, date, is_active, category_id, creator_id) FR
 15	Тефтели в томатном соусе	https://telegra.ph/Tefteli-v-tomatnom-souse-06-14	2024-06-14 10:28:56.534467+00	t	4	1
 16	Курица по-китайски	https://telegra.ph/Kurica-po-kitajski-06-14	2024-06-14 10:28:56.551689+00	t	4	1
 17	Свинина в медово-горчичном соусе	https://telegra.ph/Svinina-v-medovo-gorchichnom-souse-06-14	2024-06-14 10:28:56.569703+00	t	4	1
-18	Ризотто с грибами	https://telegra.ph/Rizotto-s-gribami-06-14	2024-06-14 10:43:03.170133+00	t	5	1
-19	Плов с бараниной	https://telegra.ph/Plov-s-baraninoj-06-14	2024-06-14 10:43:03.170133+00	t	5	1
-20	Ризотто с креветками	https://telegra.ph/Rizotto-s-krevetkami-06-14	2024-06-14 10:43:03.170133+00	t	5	1
-21	Вегетарианский плов	https://telegra.ph/Vegetarianskij-plov-06-14	2024-06-14 10:43:03.170133+00	t	5	1
-22	Маргарита	https://telegra.ph/Margarita-06-14-4	2024-06-14 10:43:03.197259+00	t	6	1
-23	Пепперони	https://telegra.ph/Pepperoni-06-14	2024-06-14 10:43:03.197259+00	t	6	1
-24	Четыре сыра	https://telegra.ph/CHetyre-syra-06-14	2024-06-14 10:43:03.197259+00	t	6	1
-25	Вегетарианская пицца	https://telegra.ph/Vegetarianskaya-picca-06-14	2024-06-14 10:43:03.197259+00	t	6	1
-26	Суши роллы	https://telegra.ph/Sushi-rolly-06-14	2024-06-14 12:49:56.602643+00	t	7	1
-27	Запеченная рыба с лимоном	https://telegra.ph/Zapechennaya-ryba-s-limonom-06-14	2024-06-14 12:49:56.602643+00	t	7	1
-28	Креветки в чесночном соусе	https://telegra.ph/Krevetki-v-chesnochnom-souse-06-14	2024-06-14 12:49:56.602643+00	t	7	1
-29	Мидии в белом вине	https://telegra.ph/Midii-v-belom-vine-06-14	2024-06-14 12:49:56.602643+00	t	7	1
+18	Ризотто с грибами	https://telegra.ph/Rizotto-s-gribami-06-14	2024-06-14 10:43:03.170133+00	t	6	1
+19	Плов с бараниной	https://telegra.ph/Plov-s-baraninoj-06-14	2024-06-14 10:43:03.170133+00	t	6	1
+20	Ризотто с креветками	https://telegra.ph/Rizotto-s-krevetkami-06-14	2024-06-14 10:43:03.170133+00	t	6	1
+21	Вегетарианский плов	https://telegra.ph/Vegetarianskij-plov-06-14	2024-06-14 10:43:03.170133+00	t	6	1
+22	Маргарита	https://telegra.ph/Margarita-06-14-4	2024-06-14 10:43:03.197259+00	t	7	1
+23	Пепперони	https://telegra.ph/Pepperoni-06-14	2024-06-14 10:43:03.197259+00	t	7	1
+24	Четыре сыра	https://telegra.ph/CHetyre-syra-06-14	2024-06-14 10:43:03.197259+00	t	7	1
+25	Вегетарианская пицца	https://telegra.ph/Vegetarianskaya-picca-06-14	2024-06-14 10:43:03.197259+00	t	7	1
+26	Суши роллы	https://telegra.ph/Sushi-rolly-06-14	2024-06-14 12:49:56.602643+00	t	5	1
+27	Запеченная рыба с лимоном	https://telegra.ph/Zapechennaya-ryba-s-limonom-06-14	2024-06-14 12:49:56.602643+00	t	5	1
+28	Креветки в чесночном соусе	https://telegra.ph/Krevetki-v-chesnochnom-souse-06-14	2024-06-14 12:49:56.602643+00	t	5	1
+29	Мидии в белом вине	https://telegra.ph/Midii-v-belom-vine-06-14	2024-06-14 12:49:56.602643+00	t	5	1
 30	Брускетта с помидорами	https://telegra.ph/Brusketta-s-pomidorami-06-14	2024-06-14 12:49:56.64234+00	t	8	1
 31	Хумус с овощами	https://telegra.ph/Humus-s-ovoshchami-06-14	2024-06-14 12:49:56.64234+00	t	8	1
 32	Мини-кесадильи	https://telegra.ph/Mini-kesadili-06-14	2024-06-14 12:49:56.64234+00	t	8	1
@@ -412,7 +412,7 @@ COPY public.report (id, reason, recipe_id, user_id) FROM stdin;
 --
 
 COPY public."user" (id, tg_id, username, name, is_admin, is_active) FROM stdin;
-1	511952153	GidroNn	Anton ill 🇦🇹	f	t
+1	511952153	GidroNn	Anton ill 🇦🇹	t	t
 \.
 
 
