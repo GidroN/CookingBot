@@ -47,8 +47,7 @@ async def process_addrecipeform_title(message: Message, state: FSMContext):
         return
 
     await state.update_data(title=message.text)
-    await message.answer(f'Отлично, теперь чтобы добавить рецепт, вам необходимо прислать ссылку на статью в telegra.ph\n'
-                         f'-----------------------------------------------------------------------------------------------'
+    await message.answer(f'Отлично, теперь чтобы добавить рецепт, вам необходимо прислать ссылку на статью в telegra.ph\n\n'
                          f'telegra.ph - Удобный простой редактор статей. Также отлично подойдет для написания рецептов.\n'
                          f'Подробнее про telegra.ph - https://telegra.ph/telegraph-01-25', reply_markup=cancel_mk)
     await state.set_state(AddRecipeForm.url)

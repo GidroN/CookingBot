@@ -8,7 +8,7 @@ from aiogram.types import Message
 from database.models import Recipe, User
 from database.redis_client import rc
 from keyboards import cancel_mk, help_kb, profile_mk, search_type_panel, user_agreement_panel, \
-    user_agree_agreement_kb
+    user_agree_agreement_kb, random_recipe_kb
 from keyboards.builders import categories, profile_panel
 from constants.button_text import ButtonText as BT
 from misc.filters import IsNotActiveUser
@@ -159,6 +159,7 @@ async def search_recipe(message: Message, state: FSMContext):
 async def random_recipe(message: Message):
     all_recipes = await Recipe.all().prefetch_related('creator', 'category')
     recipe = random.choice(all_recipes)
+    await message.answer('Случайный рецепт', reply_markup=random_recipe_kb)
     await send_single_recipe(recipe, message)
 
 

@@ -50,6 +50,6 @@ async def check_reports(message: Message):
 
 @router.message(AdminFilter(), F.text == BT.MANAGE_CATEGORIES)
 async def change_category(message: Message):
-    await message.answer('Выбери опцию:', reply_markup=admin_manage_category_panel)
+    await message.answer('Выберите опцию:', reply_markup=admin_manage_category_panel)
 
 

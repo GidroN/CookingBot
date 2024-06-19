@@ -142,6 +142,7 @@ async def select_option_to_change_category(callback: CallbackQuery, callback_dat
         if not recipes:
             await callback.message.answer('Вы уверены, что хотите удалить эту категорию?',
                                           reply_markup=confirm_delete_recipe)
+            await state.update_data(message=callback.message)
             await state.set_state(DeleteCategoryForm.confirm)
         else:
             await callback.answer(f'На данный момент в этой категории создано {recipes} рецептов, и вы не сможете ее удалить.', True)
@@ -153,9 +154,12 @@ async def delete_category(callback: CallbackQuery, callback_data: DeleteItemCall
     await callback.answer()
     data = await state.get_data()
     category = data['category']
+    msg_to_delete = data['message']
     action = callback_data.action
 
     if action == DeleteAction.CONFIRM:
+        await msg_to_delete.delete()
+        await callback.message.delete()
         await category.delete()
         await callback.message.answer('Категория успешно удалена.')
     else: # action == DeleteAction.CANCEL

@@ -126,3 +126,15 @@ user_agree_agreement_kb = ReplyKeyboardMarkup(
     resize_keyboard=True,
     input_field_placeholder='Соглашение.'
 )
+
+random_recipe_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=BT.RANDOM_RECIPE)
+        ],
+        [
+            KeyboardButton(text=BT.MAIN_MENU)
+        ]
+    ],
+    resize_keyboard=True
+)
