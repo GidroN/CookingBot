@@ -21,6 +21,8 @@ aerich = "^0.7.2"
 ipython = "^8.25.0"
 asyncpg = "^0.29.0"
 requests = "^2.32.3"
+flet = "^0.23.0"
+flet-route = "^0.3.3"
 
 
 [build-system]

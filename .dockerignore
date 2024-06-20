@@ -1,4 +1,4 @@
 /.idea/
 /venv/
-/database/db.sqlite3
+/bot/database/db.sqlite3
 /.vscode/
