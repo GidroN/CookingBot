@@ -295,7 +295,7 @@ async def process_delete_recipe_form(callback: CallbackQuery, callback_data: Del
         ids.remove(recipe_id)
         cache_list_update(client, key, ids)
         recipes = await convert_ids_list_into_objects(ids, Recipe, ['category', 'creator'])
-        await send_user_recipe_info(recipes, message_to_edit, print_find=False, edit_msg=True)
+        await send_user_recipe_change(recipes, message_to_edit, edit_msg=True)
 
     await state.clear()
 
