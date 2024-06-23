@@ -211,5 +211,6 @@ async def process_edituserform_getuserinput(message: Message, state: FSMContext)
     if change_item == UserChangeItem.NAME:
         user.name = message.text
 
-    user.save()
+    await user.save()
     await message.answer('Данные успешно изменены!', reply_markup=profile_mk)
+    await state.clear()
