@@ -11,6 +11,7 @@ from redis.exceptions import ConnectionError
 from database.connection import init
 from misc.routers import router
 from misc.config import BOT_TOKEN, REDIS_HOST, REDIS_PORT
+from misc.middlewares import CheckUserExistsMiddleware
 from database.redis_client import rc
 
 
@@ -28,6 +29,7 @@ async def main():
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)
+    dp.message.middleware(CheckUserExistsMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=True)
     try:

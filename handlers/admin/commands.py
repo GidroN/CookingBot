@@ -1,9 +1,8 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from tortoise.functions import Count
 
-from database.models import Recipe, Report
+from database.models import Recipe
 from database.redis_client import rc
 from keyboards import (admin_panel, main_menu_admin_kb,
                        main_menu_user_with_admin_option_kb, admin_manage_category_panel)
